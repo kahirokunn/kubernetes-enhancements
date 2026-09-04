@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="541" viewBox="0 0 960 541" role="img" aria-labelledby="title description">
+  <title id="title">Same name, different membership</title>
+  <desc id="description">Four dashed frames represent cluster-a through cluster-d. A blue band encloses foo-app in cluster-a and cluster-b, and a separate purple band encloses bar-app in those clusters. A green finance band encloses billing only in cluster-c and cluster-d. The billing Namespace in cluster-a is visibly outside the finance band despite having the same name.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#526574"/></marker>
+  </defs>
+  <rect width="960" height="100%" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" fill="#243746" font-weight="700" text-anchor="start">Same name, different membership</text>
+    <rect x="36" y="104" width="204" height="378" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="138.0" y="137" font-size="22" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="264" y="104" width="204" height="378" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="366.0" y="137" font-size="22" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <rect x="492" y="104" width="204" height="378" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="594.0" y="137" font-size="22" fill="#243746" font-weight="600" text-anchor="middle">cluster-c</text>
+    <rect x="720" y="104" width="204" height="378" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="822.0" y="137" font-size="22" fill="#243746" font-weight="600" text-anchor="middle">cluster-d</text>
+    <text x="62" y="175" font-size="20" fill="#2869ad" font-weight="600" text-anchor="start">foo-app group</text>
+    <rect x="58" y="187" width="388" height="66" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 89 204 L 89 198 L 120 198 L 127 204" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="80" y="204" width="116" height="36" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="138.0" y="229.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 317 204 L 317 198 L 348 198 L 355 204" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="308" y="204" width="116" height="36" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="366.0" y="229.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <text x="62" y="277" font-size="20" fill="#7750a1" font-weight="600" text-anchor="start">bar-app group</text>
+    <rect x="58" y="289" width="388" height="66" rx="17" fill="#f0eafa" stroke="#7750a1" stroke-width="2.2"/>
+    <path d="M 89 306 L 89 300 L 120 300 L 127 306" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <rect x="80" y="306" width="116" height="36" rx="5" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <text x="138.0" y="331.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">bar-app</text>
+    <path d="M 317 306 L 317 300 L 348 300 L 355 306" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <rect x="308" y="306" width="116" height="36" rx="5" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <text x="366.0" y="331.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">bar-app</text>
+    <text x="518" y="379" font-size="20" fill="#23745c" font-weight="600" text-anchor="start">finance group</text>
+    <rect x="514" y="391" width="388" height="66" rx="17" fill="#e3f3eb" stroke="#23745c" stroke-width="2.2"/>
+    <path d="M 545 408 L 545 402 L 576 402 L 583 408" fill="#ffffff" stroke="#23745c" stroke-width="1.7"/>
+    <rect x="536" y="408" width="116" height="36" rx="5" fill="#ffffff" stroke="#23745c" stroke-width="1.7"/>
+    <text x="594.0" y="433.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 773 408 L 773 402 L 804 402 L 811 408" fill="#ffffff" stroke="#23745c" stroke-width="1.7"/>
+    <rect x="764" y="408" width="116" height="36" rx="5" fill="#ffffff" stroke="#23745c" stroke-width="1.7"/>
+    <text x="822.0" y="433.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 89 408 L 89 402 L 120 402 L 127 408" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="80" y="408" width="116" height="36" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="138.0" y="433.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <text x="138" y="513" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">Outside finance</text>
+  </g>
+</svg>

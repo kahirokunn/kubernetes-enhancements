@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="567" viewBox="0 0 960 567" role="img" aria-labelledby="title description">
+  <title id="title">Changing the billing group</title>
+  <desc id="description">Three consumer observations show one possible update order for the billing group. The clusters and Namespace objects stay in fixed positions. First the blue band contains a and b. After the addition of c is observed, it contains a, b, and c, temporarily establishing sameness between a and c as well. After removal of a is observed, only b and c are inside the band. The Namespace in a remains present outside the group. This is an example of non-atomic observation, not a prescribed update order.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#526574"/></marker>
+  </defs>
+  <rect width="960" height="100%" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" fill="#243746" font-weight="700" text-anchor="start">Changing the billing group</text>
+    <text x="32" y="105" font-size="21" fill="#243746" font-weight="600" text-anchor="start">1 · Before</text>
+    <rect x="24" y="173" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="39" y="229.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-a</text>
+    <rect x="24" y="296" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="39" y="352.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-b</text>
+    <rect x="24" y="419" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="39" y="475.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-c</text>
+    <text x="356" y="105" font-size="21" fill="#243746" font-weight="600" text-anchor="start">2 · Addition observed</text>
+    <rect x="348" y="173" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="363" y="229.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-a</text>
+    <rect x="348" y="296" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="363" y="352.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-b</text>
+    <rect x="348" y="419" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="363" y="475.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-c</text>
+    <text x="680" y="105" font-size="21" fill="#243746" font-weight="600" text-anchor="start">3 · Removal observed</text>
+    <rect x="672" y="173" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="687" y="229.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-a</text>
+    <rect x="672" y="296" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="687" y="352.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-b</text>
+    <rect x="672" y="419" width="264" height="99" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="687" y="475.5" font-size="18" fill="#243746" font-weight="600" text-anchor="start">cluster-c</text>
+    <rect x="422" y="124" width="134" height="29" rx="14" fill="#fff4e4" stroke="#a85b0a" stroke-width="1.5"/>
+    <text x="489" y="145" font-size="18" fill="#a85b0a" font-weight="600" text-anchor="middle">Temporary</text>
+    <rect x="138" y="187" width="134" height="191" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 160 203 L 160 197 L 191 197 L 198 203" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="151" y="203" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="205.0" y="230.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 160 326 L 160 320 L 191 320 L 198 326" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="151" y="326" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="205.0" y="353.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 160 449 L 160 443 L 191 443 L 198 449" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="151" y="449" width="108" height="40" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="205.0" y="476.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <rect x="462" y="187" width="134" height="314" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 484 203 L 484 197 L 515 197 L 522 203" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="475" y="203" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="529.0" y="230.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 484 326 L 484 320 L 515 320 L 522 326" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="475" y="326" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="529.0" y="353.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 484 449 L 484 443 L 515 443 L 522 449" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="475" y="449" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="529.0" y="476.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <rect x="786" y="310" width="134" height="191" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 808 203 L 808 197 L 839 197 L 846 203" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="799" y="203" width="108" height="40" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="853.0" y="230.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 808 326 L 808 320 L 839 320 L 846 326" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="799" y="326" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="853.0" y="353.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 808 449 L 808 443 L 839 443 L 846 449" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="799" y="449" width="108" height="40" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="853.0" y="476.0" font-size="19" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <circle cx="583" cy="449" r="13" fill="#ffffff" stroke="#2869ad" stroke-width="2"/>
+    <text x="583" y="456" font-size="23" fill="#2869ad" font-weight="700" text-anchor="middle">+</text>
+    <circle cx="907" cy="203" r="13" fill="#ffffff" stroke="#a85b0a" stroke-width="2"/>
+    <text x="907" y="210" font-size="23" fill="#a85b0a" font-weight="700" text-anchor="middle">−</text>
+    <path d="M 300 345 L 337 345" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M 624 345 L 661 345" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+</svg>

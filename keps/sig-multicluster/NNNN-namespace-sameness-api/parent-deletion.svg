@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="625" viewBox="0 0 960 625" role="img" aria-labelledby="title description">
+  <title id="title">The relationship lasts until slice deletion</title>
+  <desc id="description">Three stages show foreground deletion of a parent with one slice publishing foo-app membership in cluster-a and cluster-b through valid ClusterProfile references. Initially the parent and slice exist and the blue band groups the two namespaces. Next deletion is requested: the parent remains visible with a deletionTimestamp while the slice and band remain. Finally the consumer observes that the slice is deleting or absent: the slice is crossed out and the group band disappears. The parent is still awaiting GC cleanup in this example. GC removes the parent after slice cleanup without waiting for the consumer. Both member clusters and both Namespace objects remain visible. With no other references remaining, the consumer removes the applied relationship; parent existence is not a consumer input.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#526574"/></marker>
+  </defs>
+  <rect width="960" height="100%" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" fill="#243746" font-weight="700" text-anchor="start">The relationship lasts until slice deletion</text>
+    <text x="32" y="73" font-size="16" fill="#526574" text-anchor="start">Foreground deletion: the parent waits for its slice.</text>
+    <text x="28" y="105" font-size="20" fill="#243746" font-weight="600" text-anchor="start">1 · Published</text>
+    <g opacity="1">
+    <path d="M 27 146 H 260 L 277 163 V 216 Q 277 220 273 220 H 27 Q 23 220 23 216 V 150 Q 23 146 27 146 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 260 146 V 163 H 277" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="150.0" y="173" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSameness</text>
+    <text x="150.0" y="201" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app</text>
+    </g>
+    <path d="M 150 220 V 266" fill="none" stroke="#526574" stroke-width="1.7"/>
+    <g opacity="1">
+    <rect x="30" y="269" width="254" height="74" rx="4" fill="#edf1f5" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 27 276 H 260 L 277 293 V 346 Q 277 350 273 350 H 27 Q 23 350 23 346 V 280 Q 23 276 27 276 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 260 276 V 293 H 277" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="150.0" y="303" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSamenessSlice</text>
+    <text x="150.0" y="331" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app-7k9p2</text>
+    </g>
+    <rect x="28" y="418" width="120" height="148" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="88.0" y="451" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="166" y="418" width="120" height="148" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="226.0" y="451" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <rect x="38" y="488" width="238" height="61" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 52 503 L 52 497 L 83 497 L 90 503" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="43" y="503" width="90" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="88.0" y="527.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 190 503 L 190 497 L 221 497 L 228 503" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="181" y="503" width="90" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="226.0" y="527.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <text x="352" y="101" font-size="20" fill="#243746" font-weight="600" text-anchor="start">2 · Parent deletion<tspan x="352" dy="24">requested</tspan></text>
+    <g opacity="1">
+    <path d="M 351 146 H 584 L 601 163 V 216 Q 601 220 597 220 H 351 Q 347 220 347 216 V 150 Q 347 146 351 146 Z" fill="#fff6e8" stroke="#a85b0a" stroke-width="1.5"/>
+    <path d="M 584 146 V 163 H 601" fill="none" stroke="#a85b0a" stroke-width="1.5"/>
+    <text x="474.0" y="173" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSameness</text>
+    <text x="474.0" y="201" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app</text>
+    </g>
+    <text x="474" y="244" font-size="15" fill="#a85b0a" text-anchor="middle">Deleting · waiting for slice</text>
+    <path d="M 474 251 V 266" fill="none" stroke="#526574" stroke-width="1.7"/>
+    <g opacity="1">
+    <rect x="354" y="269" width="254" height="74" rx="4" fill="#edf1f5" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 351 276 H 584 L 601 293 V 346 Q 601 350 597 350 H 351 Q 347 350 347 346 V 280 Q 347 276 351 276 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 584 276 V 293 H 601" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="474.0" y="303" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSamenessSlice</text>
+    <text x="474.0" y="331" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app-7k9p2</text>
+    </g>
+    <rect x="352" y="418" width="120" height="148" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="412.0" y="451" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="490" y="418" width="120" height="148" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="550.0" y="451" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <rect x="362" y="488" width="238" height="61" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 376 503 L 376 497 L 407 497 L 414 503" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="367" y="503" width="90" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="412.0" y="527.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 514 503 L 514 497 L 545 497 L 552 503" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="505" y="503" width="90" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="550.0" y="527.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <text x="676" y="101" font-size="20" fill="#243746" font-weight="600" text-anchor="start">3 · Slice deletion<tspan x="676" dy="24">observed</tspan></text>
+    <g opacity="1">
+    <path d="M 675 146 H 908 L 925 163 V 216 Q 925 220 921 220 H 675 Q 671 220 671 216 V 150 Q 671 146 675 146 Z" fill="#fff6e8" stroke="#a85b0a" stroke-width="1.5"/>
+    <path d="M 908 146 V 163 H 925" fill="none" stroke="#a85b0a" stroke-width="1.5"/>
+    <text x="798.0" y="173" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSameness</text>
+    <text x="798.0" y="201" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app</text>
+    </g>
+    <text x="798" y="244" font-size="15" fill="#a85b0a" text-anchor="middle">Deleting · GC finishing cleanup</text>
+    <g opacity="0.45">
+    <rect x="678" y="269" width="254" height="74" rx="4" fill="#edf1f5" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 675 276 H 908 L 925 293 V 346 Q 925 350 921 350 H 675 Q 671 350 671 346 V 280 Q 671 276 675 276 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 908 276 V 293 H 925" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="798.0" y="303" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSamenessSlice</text>
+    <text x="798.0" y="331" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app-7k9p2</text>
+    </g>
+    <path d="M 668 353 L 928 273" fill="none" stroke="#a85b0a" stroke-width="3"/>
+    <rect x="676" y="418" width="120" height="148" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="736.0" y="451" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="814" y="418" width="120" height="148" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="874.0" y="451" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <path d="M 700 503 L 700 497 L 731 497 L 738 503" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="691" y="503" width="90" height="34" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="736.0" y="527.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 838 503 L 838 497 L 869 497 L 876 503" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="829" y="503" width="90" height="34" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="874.0" y="527.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 298 388 L 336 388" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M 622 388 L 660 388" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="32" y="604" font-size="16" fill="#526574" text-anchor="start">GC removes the parent after slice cleanup, independently of the consumer.</text>
+  </g>
+</svg>
