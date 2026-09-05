@@ -1,0 +1,20 @@
+title: Namespace Sameness API
+kep-number: NNNN
+authors:
+  - "@kahirokunn"
+owning-sig: sig-multicluster
+status: provisional
+creation-date: 2026-09-05
+reviewers:
+  - TBD
+approvers:
+  - TBD
+
+see-also:
+  - "/keps/sig-multicluster/1645-multi-cluster-services-api"
+  - "/keps/sig-multicluster/4322-cluster-inventory"
+  - "/keps/sig-multicluster/5313-placement-decision-api"
+
+stage: alpha
+
+disable-supported: true

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="442" viewBox="0 0 960 442" role="img" aria-labelledby="title description">
+  <title id="title">One namespace group, two clusters</title>
+  <desc id="description">The foo-app Namespace in cluster-a and the foo-app Namespace in cluster-b are enclosed by one blue namespace sameness band. The dashed frames are separate clusters; the tabbed tiles are Namespace objects. The band shows a relationship used by an integrated consumer, not a network connection or an instruction to create namespaces.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#526574"/></marker>
+  </defs>
+  <rect width="960" height="100%" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" fill="#243746" font-weight="700" text-anchor="start">One namespace group, two clusters</text>
+    <rect x="96" y="112" width="300" height="246" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="246.0" y="145" font-size="24" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="564" y="112" width="300" height="246" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="714.0" y="145" font-size="24" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <text x="480" y="216" font-size="22" fill="#2869ad" font-weight="600" text-anchor="middle">foo-app group</text>
+    <rect x="133" y="233" width="694" height="90" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 172 256 L 172 250 L 203 250 L 210 256" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="163" y="256" width="166" height="46" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="246.0" y="286.0" font-size="23" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 640 256 L 640 250 L 671 250 L 678 256" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="631" y="256" width="166" height="46" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="714.0" y="286.0" font-size="23" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <rect x="142" y="397" width="28" height="23" rx="4" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="182" y="416" font-size="18" fill="#526574" font-weight="400" text-anchor="start">Cluster</text>
+    <path d="M 342.8 398 L 342.8 392 L 354 392 L 361 398" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="337" y="398" width="29" height="22" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="351.5" y="416.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle"></text>
+    <text x="378" y="416" font-size="18" fill="#526574" font-weight="400" text-anchor="start">Namespace</text>
+    <rect x="583" y="398" width="43" height="22" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <text x="638" y="416" font-size="18" fill="#526574" font-weight="400" text-anchor="start">Sameness group</text>
+  </g>
+</svg>

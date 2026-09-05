@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="487" viewBox="0 0 960 487" role="img" aria-labelledby="title description">
+  <title id="title">A conflict blocks only one addition</title>
+  <desc id="description">Before the request, team-a contains billing in cluster-a and cluster-b; team-b already contains billing in cluster-c. The request adds cluster-c and cluster-d to team-a. After reconciliation, the blue team-a band still contains a and b and now also contains d, marked with a plus. The purple team-b band still contains c. Only the attempted admission of c is crossed out and remains pending. The accepted a/b/d relationship remains usable.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#526574"/></marker>
+  </defs>
+  <rect width="960" height="100%" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" fill="#243746" font-weight="700" text-anchor="start">A conflict blocks only one addition</text>
+    <text x="32" y="83" font-size="20" fill="#526574" font-weight="400" text-anchor="start">Request: add cluster-c and cluster-d</text>
+    <text x="28" y="147" font-size="23" fill="#243746" font-weight="600" text-anchor="start">Before</text>
+    <rect x="28" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="76.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="136" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="184.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <rect x="244" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="292.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-d</text>
+    <rect x="352" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="400.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-c</text>
+    <rect x="33" y="289" width="194" height="94" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <text x="130.0" y="316" font-size="19" fill="#2869ad" font-weight="600" text-anchor="middle">team-a</text>
+    <rect x="357" y="289" width="86" height="94" rx="17" fill="#f0eafa" stroke="#7750a1" stroke-width="2.2"/>
+    <text x="400" y="316" font-size="18" fill="#7750a1" font-weight="600" text-anchor="middle">team-b</text>
+    <path d="M 46 336 L 46 330 L 77 330 L 84 336" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="37" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="76.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 154 336 L 154 330 L 185 330 L 192 336" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="145" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="184.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 262 336 L 262 330 L 293 330 L 300 336" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <rect x="253" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#73818d" stroke-width="1.7"/>
+    <text x="292.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 370 336 L 370 330 L 401 330 L 408 336" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <rect x="361" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <text x="400.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <text x="528" y="147" font-size="23" fill="#243746" font-weight="600" text-anchor="start">After</text>
+    <rect x="528" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="576.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="636" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="684.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <rect x="744" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="792.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-d</text>
+    <rect x="852" y="202" width="96" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="900.0" y="235" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">cluster-c</text>
+    <rect x="533" y="289" width="302" height="94" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <text x="684.0" y="316" font-size="19" fill="#2869ad" font-weight="600" text-anchor="middle">team-a</text>
+    <rect x="857" y="289" width="86" height="94" rx="17" fill="#f0eafa" stroke="#7750a1" stroke-width="2.2"/>
+    <text x="900" y="316" font-size="18" fill="#7750a1" font-weight="600" text-anchor="middle">team-b</text>
+    <path d="M 546 336 L 546 330 L 577 330 L 584 336" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="537" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="576.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 654 336 L 654 330 L 685 330 L 692 336" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="645" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="684.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 762 336 L 762 330 L 793 330 L 800 336" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="753" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="792.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 870 336 L 870 330 L 901 330 L 908 336" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <rect x="861" y="336" width="78" height="34" rx="5" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <text x="900.0" y="360.0" font-size="18" fill="#243746" font-weight="400" text-anchor="middle">billing</text>
+    <path d="M 466 326 L 506 326" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <circle cx="827" cy="336" r="13" fill="#ffffff" stroke="#2869ad" stroke-width="2"/>
+    <text x="827" y="343" font-size="23" fill="#2869ad" font-weight="700" text-anchor="middle">+</text>
+    <path d="M 900 383 V 423 H 796 V 384" fill="none" stroke="#526574" stroke-width="1.8" stroke-dasharray="5 5" marker-end="url(#arrow)"/>
+    <circle cx="847" cy="423" r="13" fill="#ffffff" stroke="#a85b0a" stroke-width="2"/>
+    <text x="847" y="430" font-size="23" fill="#a85b0a" font-weight="700" text-anchor="middle">×</text>
+    <text x="900" y="468" font-size="19" fill="#a85b0a" font-weight="400" text-anchor="middle">c pending</text>
+  </g>
+</svg>

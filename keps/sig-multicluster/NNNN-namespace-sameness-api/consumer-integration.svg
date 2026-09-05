@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="750" viewBox="0 0 960 750" role="img" aria-labelledby="title description">
+  <title id="title">One namespace group, two controllers</title>
+  <desc id="description">Top: one blue sameness band encloses foo-app in cluster-a and cluster-b. The same published membership feeds an MCS controller and another multicluster controller, each independently enabled by the administrator. Bottom: an MCS example uses that membership. In cluster-a/foo-app, orders has a ServiceExport and metrics does not. The MCS controller creates an orders ServiceImport in cluster-b/foo-app. The arrows show membership input and MCS resource processing, not network connections or automatic controller selection.</desc>
+  <defs>
+    <marker id="membership-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2869ad"/>
+    </marker>
+    <marker id="export-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#23745c"/>
+    </marker>
+  </defs>
+  <rect width="960" height="750" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" font-weight="700">One namespace group, two controllers</text>
+
+    <!-- One relationship can be used by several independently enabled consumers. -->
+    <text x="40" y="103" font-size="21" font-weight="600">One namespace group</text>
+    <rect x="40" y="130" width="214" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="147" y="163" font-size="22" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="284" y="130" width="214" height="188" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="391" y="163" font-size="22" font-weight="600" text-anchor="middle">cluster-b</text>
+    <text x="269" y="204" font-size="20" fill="#2869ad" font-weight="600" text-anchor="middle">foo-app group</text>
+    <rect x="58" y="218" width="422" height="72" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 89 237 V 231 H 120 L 127 237" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="80" y="237" width="136" height="38" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="148" y="263" font-size="22" text-anchor="middle">foo-app</text>
+    <path d="M 331 237 V 231 H 362 L 369 237" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="322" y="237" width="136" height="38" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="390" y="263" font-size="22" text-anchor="middle">foo-app</text>
+
+    <text x="650" y="103" font-size="21" font-weight="600">Administrator enables each</text>
+    <path d="M 480 254 H 526 M 526 178 V 280" fill="none" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 526 178 H 642" fill="none" stroke="#2869ad" stroke-width="2.2" marker-end="url(#membership-arrow)"/>
+    <path d="M 526 280 H 642" fill="none" stroke="#2869ad" stroke-width="2.2" marker-end="url(#membership-arrow)"/>
+    <text x="588" y="223" font-size="17" fill="#2869ad" text-anchor="middle">same</text>
+    <text x="588" y="244" font-size="17" fill="#2869ad" text-anchor="middle">membership</text>
+    <rect x="650" y="138" width="278" height="80" rx="8" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="668" y="184" font-size="21" font-weight="600">MCS controller</text>
+    <rect x="871" y="163" width="42" height="29" rx="14" fill="#e3f3eb" stroke="#23745c" stroke-width="1.4"/>
+    <text x="892" y="183" font-size="16" fill="#23745c" font-weight="700" text-anchor="middle">ON</text>
+    <rect x="650" y="240" width="278" height="80" rx="8" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="668" y="286" font-size="21" font-weight="600">Another controller</text>
+    <rect x="871" y="265" width="42" height="29" rx="14" fill="#e3f3eb" stroke="#23745c" stroke-width="1.4"/>
+    <text x="892" y="285" font-size="16" fill="#23745c" font-weight="700" text-anchor="middle">ON</text>
+
+    <path d="M 32 366 H 928" fill="none" stroke="#dce3e9" stroke-width="1.5"/>
+
+    <!-- A ServiceExport selects a Service within the shared Namespace. -->
+    <text x="40" y="416" font-size="23" font-weight="600">ServiceExport selects the Service to share</text>
+    <rect x="40" y="448" width="326" height="239" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="203" y="480" font-size="22" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="712" y="448" width="216" height="239" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="820" y="480" font-size="22" font-weight="600" text-anchor="middle">cluster-b</text>
+    <path d="M 67 502 V 496 H 98 L 105 502" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="58" y="502" width="290" height="164" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="77" y="527" font-size="21" fill="#2869ad" font-weight="600">foo-app</text>
+    <path d="M 737 502 V 496 H 768 L 775 502" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="728" y="502" width="184" height="164" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="820" y="527" font-size="21" fill="#2869ad" font-weight="600" text-anchor="middle">foo-app</text>
+
+    <rect x="74" y="546" width="106" height="47" rx="5" fill="#e3f3eb" stroke="#23745c" stroke-width="1.5"/>
+    <text x="127" y="576" font-size="21" font-weight="600" text-anchor="middle">orders</text>
+    <path d="M 201 540 H 314 L 331 557 V 594 Q 331 598 327 598 H 201 Q 197 598 197 594 V 544 Q 197 540 201 540 Z" fill="#ffffff" stroke="#23745c" stroke-width="1.5"/>
+    <path d="M 314 540 V 557 H 331" fill="none" stroke="#23745c" stroke-width="1.5"/>
+    <text x="264" y="563" font-size="16" fill="#23745c" font-weight="600" text-anchor="middle">ServiceExport</text>
+    <text x="264" y="587" font-size="20" text-anchor="middle">orders</text>
+    <path d="M 180 570 H 194" fill="none" stroke="#23745c" stroke-width="1.5"/>
+    <rect x="74" y="614" width="106" height="36" rx="5" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="127" y="639" font-size="20" text-anchor="middle">metrics</text>
+    <text x="197" y="638" font-size="17" fill="#526574">No ServiceExport</text>
+
+    <path d="M 331 570 H 422" fill="none" stroke="#23745c" stroke-width="2.2" marker-end="url(#export-arrow)"/>
+    <rect x="430" y="534" width="194" height="80" rx="8" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="527" y="566" font-size="21" font-weight="600" text-anchor="middle">MCS controller</text>
+    <text x="527" y="594" font-size="17" fill="#526574" text-anchor="middle">uses the group above</text>
+    <path d="M 624 574 H 738" fill="none" stroke="#23745c" stroke-width="2.2" marker-end="url(#export-arrow)"/>
+    <text x="669" y="556" font-size="17" fill="#23745c" text-anchor="middle">creates</text>
+    <path d="M 748 546 H 879 L 896 563 V 628 Q 896 632 892 632 H 748 Q 744 632 744 628 V 550 Q 744 546 748 546 Z" fill="#e3f3eb" stroke="#23745c" stroke-width="1.5"/>
+    <path d="M 879 546 V 563 H 896" fill="none" stroke="#23745c" stroke-width="1.5"/>
+    <text x="820" y="578" font-size="17" fill="#23745c" font-weight="600" text-anchor="middle">ServiceImport</text>
+    <text x="820" y="609" font-size="23" font-weight="600" text-anchor="middle">orders</text>
+    <text x="480" y="727" font-size="19" fill="#526574" text-anchor="middle">orders is imported into cluster-b; metrics has no MCS export.</text>
+  </g>
+</svg>

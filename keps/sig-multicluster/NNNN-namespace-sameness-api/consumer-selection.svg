@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" role="img" aria-labelledby="title description">
+  <title id="title">Different groups, different MCS controllers</title>
+  <desc id="description">Two dashed frames represent cluster-a and cluster-b. A blue sameness band encloses foo-app in both clusters and points to MCS controller A, which manages foo-app imports. A separate purple band encloses bar-app in the same clusters and points to MCS controller B, which manages bar-app imports. Administrators configure which namespace each controller manages. The arrows show the membership applied to the assigned imports, not restricted watches or automatic controller selection. Each controller still observes all slices in its configured authority scope to check for membership conflicts.</desc>
+  <defs>
+    <marker id="foo-app-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2869ad"/>
+    </marker>
+    <marker id="bar-app-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7750a1"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" font-weight="700">Different groups, different MCS controllers</text>
+    <text x="32" y="82" font-size="20" fill="#526574">Administrators configure which namespace each controller manages.</text>
+
+    <rect x="40" y="126" width="214" height="272" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="147" y="158" font-size="22" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="284" y="126" width="214" height="272" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="391" y="158" font-size="22" font-weight="600" text-anchor="middle">cluster-b</text>
+
+    <!-- Each band connects the same namespace name across the two clusters. -->
+    <text x="62" y="184" font-size="20" fill="#2869ad" font-weight="600">foo-app group</text>
+    <rect x="58" y="198" width="422" height="72" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 89 217 V 211 H 120 L 127 217" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="80" y="217" width="136" height="38" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="148" y="243" font-size="22" text-anchor="middle">foo-app</text>
+    <path d="M 331 217 V 211 H 362 L 369 217" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="322" y="217" width="136" height="38" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="390" y="243" font-size="22" text-anchor="middle">foo-app</text>
+
+    <text x="62" y="294" font-size="20" fill="#7750a1" font-weight="600">bar-app group</text>
+    <rect x="58" y="308" width="422" height="72" rx="17" fill="#f0eafa" stroke="#7750a1" stroke-width="2.2"/>
+    <path d="M 89 327 V 321 H 120 L 127 327" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <rect x="80" y="327" width="136" height="38" rx="5" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <text x="148" y="353" font-size="22" text-anchor="middle">bar-app</text>
+    <path d="M 331 327 V 321 H 362 L 369 327" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <rect x="322" y="327" width="136" height="38" rx="5" fill="#ffffff" stroke="#7750a1" stroke-width="1.7"/>
+    <text x="390" y="353" font-size="22" text-anchor="middle">bar-app</text>
+
+    <!-- The arrows show applied membership; conflict checks still cover the authority scope. -->
+    <path d="M 480 234 H 642" fill="none" stroke="#2869ad" stroke-width="2.2" marker-end="url(#foo-app-arrow)"/>
+    <text x="568" y="223" font-size="17" fill="#2869ad" text-anchor="middle">membership</text>
+    <rect x="650" y="194" width="278" height="80" rx="8" fill="#e7f0fc" stroke="#2869ad" stroke-width="1.5"/>
+    <text x="789" y="225" font-size="21" font-weight="600" text-anchor="middle">MCS controller A</text>
+    <text x="789" y="252" font-size="18" fill="#2869ad" text-anchor="middle">Manages foo-app imports</text>
+
+    <path d="M 480 344 H 642" fill="none" stroke="#7750a1" stroke-width="2.2" marker-end="url(#bar-app-arrow)"/>
+    <text x="568" y="333" font-size="17" fill="#7750a1" text-anchor="middle">membership</text>
+    <rect x="650" y="304" width="278" height="80" rx="8" fill="#f0eafa" stroke="#7750a1" stroke-width="1.5"/>
+    <text x="789" y="335" font-size="21" font-weight="600" text-anchor="middle">MCS controller B</text>
+    <text x="789" y="362" font-size="18" fill="#7750a1" text-anchor="middle">Manages bar-app imports</text>
+
+    <text x="480" y="440" font-size="19" fill="#526574" text-anchor="middle">Each arrow shows the membership used for the assigned imports.</text>
+  </g>
+</svg>

@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="728" viewBox="0 0 960 728" role="img" aria-labelledby="title description">
+  <title id="title">Two slices, one group</title>
+  <desc id="description">The inventory namespace of the management API contains NamespaceSameness foo-app, two NamespaceSamenessSlices belonging to that parent, and four ClusterProfiles. Each slice publishes namespace foo-app. Slice foo-app-7k9p2 references profiles cluster-a and cluster-b; slice foo-app-m4q8r references cluster-c and cluster-d. Solid arrows are ClusterProfile references. Dashed lines map profiles to the member clusters they represent. One blue band encloses foo-app across all four clusters: the two slices are parts of one group, grouped by the same controller owner UID.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#526574"/></marker>
+  </defs>
+  <rect width="960" height="100%" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#243746" stroke-linejoin="round" stroke-linecap="round">
+    <text x="32" y="47" font-size="28" fill="#243746" font-weight="700" text-anchor="start">Two slices, one group</text>
+    <rect x="32" y="88" width="896" height="399" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="54" y="119" font-size="20" fill="#526574" font-weight="600" text-anchor="start">Management API · inventory</text>
+    <g opacity="1">
+    <path d="M 334 140 H 613 L 630 157 V 208 Q 630 212 626 212 H 334 Q 330 212 330 208 V 144 Q 330 140 334 140 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 613 140 V 157 H 630" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="480.0" y="167" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSameness</text>
+    <text x="480.0" y="195" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app</text>
+    </g>
+    <path d="M 480 212 V 230 M 280 248 V 230 H 680 V 248" fill="none" stroke="#526574" stroke-width="1.7"/>
+    <g opacity="1">
+    <rect x="141" y="247" width="292" height="104" rx="4" fill="#edf1f5" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 138 254 H 409 L 426 271 V 354 Q 426 358 422 358 H 138 Q 134 358 134 354 V 258 Q 134 254 138 254 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 409 254 V 271 H 426" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="280.0" y="281" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSamenessSlice</text>
+    <text x="280.0" y="309" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app-7k9p2</text>
+    </g>
+    <g opacity="1">
+    <rect x="541" y="247" width="292" height="104" rx="4" fill="#edf1f5" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 538 254 H 809 L 826 271 V 354 Q 826 358 822 358 H 538 Q 534 358 534 354 V 258 Q 534 254 538 254 Z" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <path d="M 809 254 V 271 H 826" fill="none" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="680.0" y="281" font-size="18" fill="#243746" font-weight="600" text-anchor="middle">NamespaceSamenessSlice</text>
+    <text x="680.0" y="309" font-size="19" fill="#526574" font-weight="400" text-anchor="middle">foo-app-m4q8r</text>
+    </g>
+    <text x="280" y="344" font-size="19" fill="#2869ad" font-weight="600" text-anchor="middle">foo-app</text>
+    <text x="680" y="344" font-size="19" fill="#2869ad" font-weight="600" text-anchor="middle">foo-app</text>
+    <text x="480" y="383" font-size="18" fill="#526574" font-weight="600" text-anchor="middle">ClusterProfiles</text>
+    <path d="M 280 358 V 374 M 156 398 V 374 H 372 V 398" fill="none" stroke="#526574" stroke-width="1.6"/>
+    <path d="M 156 392 L 156 405" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M 372 392 L 372 405" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M 680 358 V 374 M 588 398 V 374 H 804 V 398" fill="none" stroke="#526574" stroke-width="1.6"/>
+    <path d="M 588 392 L 588 405" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M 804 392 L 804 405" fill="none" stroke="#526574" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="70" y="406" width="172" height="49" rx="5" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="156" y="437" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">cluster-a</text>
+    <path d="M 156 455 V 527" fill="none" stroke="#526574" stroke-width="1.6" stroke-dasharray="4 5"/>
+    <rect x="70" y="528" width="172" height="147" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="156.0" y="561" font-size="20" fill="#243746" font-weight="600" text-anchor="middle">cluster-a</text>
+    <rect x="286" y="406" width="172" height="49" rx="5" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="372" y="437" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">cluster-b</text>
+    <path d="M 372 455 V 527" fill="none" stroke="#526574" stroke-width="1.6" stroke-dasharray="4 5"/>
+    <rect x="286" y="528" width="172" height="147" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="372.0" y="561" font-size="20" fill="#243746" font-weight="600" text-anchor="middle">cluster-b</text>
+    <rect x="502" y="406" width="172" height="49" rx="5" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="588" y="437" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">cluster-c</text>
+    <path d="M 588 455 V 527" fill="none" stroke="#526574" stroke-width="1.6" stroke-dasharray="4 5"/>
+    <rect x="502" y="528" width="172" height="147" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="588.0" y="561" font-size="20" fill="#243746" font-weight="600" text-anchor="middle">cluster-c</text>
+    <rect x="718" y="406" width="172" height="49" rx="5" fill="#ffffff" stroke="#8595a3" stroke-width="1.5"/>
+    <text x="804" y="437" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">cluster-d</text>
+    <path d="M 804 455 V 527" fill="none" stroke="#526574" stroke-width="1.6" stroke-dasharray="4 5"/>
+    <rect x="718" y="528" width="172" height="147" rx="10" fill="#f7f9fb" stroke="#8595a3" stroke-width="1.5" stroke-dasharray="6 5"/>
+    <text x="804.0" y="561" font-size="20" fill="#243746" font-weight="600" text-anchor="middle">cluster-d</text>
+    <rect x="83" y="590" width="794" height="63" rx="17" fill="#e7f0fc" stroke="#2869ad" stroke-width="2.2"/>
+    <path d="M 105 605 L 105 599 L 136 599 L 143 605" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="96" y="605" width="120" height="36" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="156.0" y="630.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 321 605 L 321 599 L 352 599 L 359 605" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="312" y="605" width="120" height="36" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="372.0" y="630.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 537 605 L 537 599 L 568 599 L 575 605" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="528" y="605" width="120" height="36" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="588.0" y="630.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <path d="M 753 605 L 753 599 L 784 599 L 791 605" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <rect x="744" y="605" width="120" height="36" rx="5" fill="#ffffff" stroke="#2869ad" stroke-width="1.7"/>
+    <text x="804.0" y="630.0" font-size="20" fill="#243746" font-weight="400" text-anchor="middle">foo-app</text>
+    <text x="480" y="709" font-size="21" fill="#2869ad" font-weight="600" text-anchor="middle">foo-app group</text>
+  </g>
+</svg>
