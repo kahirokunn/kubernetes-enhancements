@@ -24,6 +24,7 @@
   - [API Example](#api-example)
   - [Implementation Details](#implementation-details)
     - [Consumer Discovery and Usage](#consumer-discovery-and-usage)
+      - [Optional decision groups](#optional-decision-groups)
     - [Slicing](#slicing)
     - [Lifecycle](#lifecycle)
     - [Ownership](#ownership)
@@ -176,9 +177,9 @@ This API aims to solve the following problems:
 
 Technical goals:
 * Define a namespaced, minimalistic, data-only `PlacementDecision` API that lists selected clusters.
-* Support continuous rescheduling where decision lists may be updated over time.
-* Guarantee that every (`clusterNamespace`, `clusterName`) pair matches a `ClusterProfile` in the fleet (enforced via admission).
-* Provide label and naming conventions so consumers can retrieve all slices of one decision via label selector or deterministic naming.
+* Support continuous rescheduling where decisions are republished over time.
+* Guarantee that every `clusterProfileRef` resolves to a `ClusterProfile` in the fleet (enforced via admission).
+* Provide label conventions so consumers can assemble a complete decision from its slices.
 * Leave room for scheduler-specific implementations and workload-aware placement logic.
 
 ### Non-Goals
@@ -216,6 +217,7 @@ Key characteristics:
 - Data-only resource: No business logic, just a list of selected clusters
 - Namespace-scoped: Aligns with Work and ClusterProfile for consistent RBAC
 - Sliceable: Can represent decisions with hundreds of clusters using multiple slice objects
+- Versioned: Each reschedule publishes a new complete revision, optionally in ordered groups
 - Optional correlation: Can be tied to specific workloads via labels, or published as generic streams
 - Read-only for consumers: Clear ownership model prevents conflicts
 
@@ -231,27 +233,22 @@ Key characteristics:
    3. ML scheduler scores `ClusterProfile`s by available GPUs, GPU type, cost, network latency, etc.
    4. Scheduler writes `PlacementDecision` with label `multicluster.x-k8s.io/placement-key="training-job-resnet50-123"` listing chosen clusters (e.g., gpu-cluster-west, gpu-cluster-east)
    5. GitOps/Work-API syncer watches decisions, finds the training Job by matching placement-key, deploys to selected clusters
-   6. If GPUs become unavailable or cost spikes, scheduler updates the `PlacementDecision` with new clusters; syncer reconciles
+   6. If GPUs become unavailable or cost spikes, scheduler publishes a new `PlacementDecision` revision with new clusters; syncer reconciles
 
  * Key point: Scheduler understands GPU requirements (workload-aware), consumer just reads "deploy to these clusters"
 
 #### Story 2: Progressive rollout
 
  * Initiator: Progressive rollout controller managing canary deployment of `my-service` v2.0
- * Workload: Kubernetes Deployment with new version (release: "v2.0-canary")
+ * Workload: Kubernetes Deployment with new version (release: "v2.0")
  * Flow:
-   1. Rollout controller creates placement request for phase 1: "10% of clusters" (vendor-specific API)
-   2. Labels the v2.0 Deployment with `multicluster.x-k8s.io/placement-key="my-service-v2.0-canary"`
-   3. Scheduler (or rollout controller acting as scheduler) creates `PlacementDecision` with:
-      - Label: `multicluster.x-k8s.io/placement-key="my-service-v2.0-canary"` (this ties decision to the specific release)
-      - Label: `multicluster.x-k8s.io/decision-key="my-service-v2.0-rollout"` (for correlating multiple slices if needed)
-      - Clusters: [cluster-us-west-1] (10% of fleet)
-   4. Consumer (GitOps engine) watches decisions, finds the one matching placement-key "my-service-v2.0-canary", deploys v2.0 to cluster-us-west-1
-   5. After validation, rollout controller updates placement request to "50% of clusters"
-   6. Scheduler updates the SAME `PlacementDecision` object (still keyed to "my-service-v2.0-canary") with more clusters: [cluster-us-west-1, cluster-us-east-1, cluster-eu-west-1, cluster-ap-south-1, cluster-ap-east-1]
-   7. Consumer reconciles: deploys to 4 new clusters
+   1. Rollout controller creates a placement request for a staged rollout: canary, staging, then production (vendor-specific API)
+   2. Labels the v2.0 Deployment with `multicluster.x-k8s.io/placement-key="my-service-v2.0"`
+   3. Scheduler (or rollout controller acting as scheduler) creates a `PlacementDecision` revision with label `multicluster.x-k8s.io/placement-key="my-service-v2.0"` (this ties decision to the specific release) and one decision group per stage
+   4. Consumer (GitOps engine) watches decisions, finds the v2.0 Deployment by matching placement-key, deploys v2.0 to the canary group
+   5. After the canary group is validated, the consumer deploys to the staging group, then the production group
 
- * Key point: The release identifier ("v2.0-canary") is encoded in the placement-key value, allowing the consumer to match the correct workload to its placement decision. Progressive expansion happens by updating the cluster list in the same keyed decision object.
+ * Key point: The release identifier ("v2.0") is encoded in the placement-key value, allowing the consumer to match the correct workload to its placement decision.
 
 #### Story 3: Disaster recovery
 
@@ -263,10 +260,10 @@ Key characteristics:
       - Label: `multicluster.x-k8s.io/placement-key="db-primary"`
       - Clusters: [prod-us-east-1] (healthy primary)
    3. DR controller continuously monitors `ClusterProfile` status for health signals
-   4. Primary cluster fails, then DR controller updates `PlacementDecision`:
+   4. Primary cluster fails, then DR controller publishes a new `PlacementDecision` revision:
       - Clusters: [prod-us-west-2] (promoted standby)
    5. Consumer (workload syncer) reconciles: deletes workload from failed cluster, creates on standby
-   6. When primary recovers, DR controller may update decision again to fail back
+   6. When primary recovers, DR controller may publish another revision to fail back
 
 * Key point: No workload-specific request needed; DR controller directly writes decisions based on cluster health
 
@@ -325,6 +322,12 @@ This architectural flexibility wasn't the primary goal but emerges naturally fro
 
 ### Risks and Mitigations
 
+* Incomplete or invalid highest revision: consumers stay on the highest complete and valid revision
+  ([Consumer Discovery and Usage](#consumer-discovery-and-usage))
+* Mutually untrusted producers in one namespace: each producer writes to its own namespace ([Ownership](#ownership))
+* `ClusterProfile` deleted after admission: consumers keep their last applied state until the producer publishes a new
+  revision ([Consumer Discovery and Usage](#consumer-discovery-and-usage))
+
 ## Design Details
 
 This section provides the technical specification of the PlacementDecision API.
@@ -341,8 +344,14 @@ This section provides the technical specification of the PlacementDecision API.
   Producers may also put this label on `PlacementDecision` slices when the decision is workload scoped.
   (Decisions not tied to a workload need not set this label.)
 
-- **Decision key**: An opaque correlation string chosen by implementers to group decision slices.
-  When used, it is carried in the `multicluster.x-k8s.io/decision-key` label.
+- **Decision key**: The identifier of one decision in a namespace, carried in the `multicluster.x-k8s.io/decision-key`
+  label.
+
+- **Decision revision**: The numeric version of one published scheduling decision.
+
+- **Decision slice**: One `PlacementDecision` object in a revision.
+
+- **Decision group**: An indexed subset of the clusters in a revision.
 
 - **Scheduler**: A controller that writes `PlacementDecisions` based on `ClusterProfiles` and
   scheduling/placement requirements/specs.
@@ -358,9 +367,19 @@ Design principle: The resource is pure data following `EndpointSlice` convention
 
 Size limits: Maximum 100 ClusterDecision entries per slice keeps objects well below etcd limit.
 
-Validation: A webhook may verify that every (clusterNamespace, clusterName)
-  pair has a matching ClusterProfile in the fleet.
-  If `multicluster.x-k8s.io/decision-index` is set, it should be >=0.
+Validation: A validating admission webhook MUST reject a create when:
+
+- a label required by [API Definition](#api-definition) is missing, or a label value violates [Slicing](#slicing) or
+  [Optional decision groups](#optional-decision-groups)
+- a reference does not identify an existing `ClusterProfile` by namespace, name, and UID
+- the requesting user is not authorized to `get` that `ClusterProfile`
+
+The webhook validates each slice on its own. Consumers verify the rules that span a revision
+([Consumer Discovery and Usage](#consumer-discovery-and-usage)). The webhook MUST fail closed when it cannot validate
+the reference or its authorization.
+
+Immutability: The webhook MUST reject an update that changes `decisions`, `schedulerName`, or any label defined in
+[API Definition](#api-definition). Other metadata remains mutable.
 
 ### API Definition
 
@@ -380,18 +399,30 @@ type PlacementDecision struct {
   SchedulerName string `json:"schedulerName,omitempty"`
 }
 
-// Optional: when a decision spans multiple slices: links all slices to the same decision.
+// Required: identifier of one decision in the namespace, stable across revisions.
 const DecisionKeyLabel = "multicluster.x-k8s.io/decision-key"
 
-// Optional: label that indicates the index position of this slice when order matters.
+// Required: revision this slice belongs to.
+const DecisionRevisionLabel = "multicluster.x-k8s.io/decision-revision"
+
+// Required: number of slices in this revision.
+const DecisionSliceCountLabel = "multicluster.x-k8s.io/decision-slice-count"
+
+// Required: index of this slice within the revision.
 const DecisionIndexLabel = "multicluster.x-k8s.io/decision-index"
+
+// Optional: index of the group that contains this slice.
+const DecisionGroupIndexLabel = "multicluster.x-k8s.io/decision-group-index"
+
+// Optional: display name of the group that contains this slice.
+const DecisionGroupNameLabel = "multicluster.x-k8s.io/decision-group-name"
 
 // Optional: label that links a decision to an originating workload when applicable.
 const PlacementKeyLabel = "multicluster.x-k8s.io/placement-key"
 
 // ClusterDecision references a target ClusterProfile to apply workloads to.
 type ClusterDecision struct {
-  // Reference to the target ClusterProfile.
+  // Reference to the target ClusterProfile. Namespace, name, and UID are required.
   ClusterProfileRef corev1.ObjectReference `json:"clusterProfileRef"`
 
   // Optional: Reason to why this cluster was chosen.
@@ -411,9 +442,9 @@ metadata:
   labels:
     # Optional: present when the decision is tied to a workload
     multicluster.x-k8s.io/placement-key: "my-app"
-    # Optional: if this logical decision spans multiple slices
     multicluster.x-k8s.io/decision-key: "argocd-app-placement-decision"
-    # Optional: ordering hint when order matters across slices
+    multicluster.x-k8s.io/decision-revision: "0"
+    multicluster.x-k8s.io/decision-slice-count: "1"
     multicluster.x-k8s.io/decision-index: "0"
 schedulerName: multicluster-placement-controller
 decisions:
@@ -422,12 +453,14 @@ decisions:
     kind: ClusterProfile
     namespace: fleet1
     name: cluster1
+    uid: d47a1b21-7e21-4c28-a807-64e48c32f001
   reason: "GPUs available"
 - clusterProfileRef:
     apiVersion: multicluster.x-k8s.io/v1alpha1
     kind: ClusterProfile
     namespace: fleet1
     name: cluster2
+    uid: e293b201-a51d-46c5-a675-02122ab2f002
   reason: "GPUs available"
 ```
 
@@ -437,67 +470,66 @@ This section describes how the API should be implemented in practice.
 
 #### Consumer Discovery and Usage
 
-Consumers can discover and use `PlacementDecision` in one of the following ways:
+Consumers discover a decision by (namespace, `decision-key`). A consumer MUST NOT use `placement-key` as its only
+selector: that optional correlation value can change or disappear in a later revision. Object names are for debugging
+only and MUST NOT be parsed to assemble a revision.
 
-**Label selector (recommended)**
+For each decision key, a consumer:
 
-- If the decision is workload scoped, the producer may set `multicluster.x-k8s.io/placement-key=<placement-key>` on slices.
-  Consumers can list/watch with `labelSelector=multicluster.x-k8s.io/placement-key=<placement-key>` in the namespace.
-- If ordering matters and results span multiple slices, producer should set
-  `multicluster.x-k8s.io/decision-index=<0..N>` and consumers can sort by that label.
-- When multiple slices exist for one logical decision, the producer **MUST** set the same
-  `multicluster.x-k8s.io/decision-key=<decision-key>` on all slices.
-- To avoid assembling partially updated sets during reschedules, consumers SHOULD also group by a common
-  `multicluster.x-k8s.io/decision-revision` value across slices.
+1. Selects the highest complete and valid revision ([Slicing](#slicing)).
+2. Resolves every referenced `ClusterProfile` by namespace, name, and UID.
+3. Applies the revision only when step 2 succeeds. Otherwise it keeps its last applied state.
 
-**Deterministic naming**
-- Producer uses a predictable naming scheme (`<base>-<slice-index>`),
-  and the consumer `Get`s by name or lists by a name prefix within a namespace.
-- When using naming for grouping, the consumer is responsible for correlating all slices that share the same base.
+##### Optional decision groups
 
-Controllers may implement both options simultaneously.
+A revision is grouped when any slice carries `decision-group-index`. Every slice in a grouped revision MUST carry it.
+Group indexes are contiguous from `0`. A group may span multiple slices. A group-aware consumer processes the groups of
+the selected revision in ascending `decision-group-index` order.
+
+`decision-group-name` is a display name. It MUST NOT appear without `decision-group-index`, MUST be non-empty, and MUST
+be present with the same value on every slice of the group.
+
+A consumer that is not group-aware MUST NOT apply a grouped revision.
 
 #### Slicing
 
-* Following [EndpointSlice](https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/) design,
-  a single scheduling decision can fan out to N `PlacementDecision` slices,
-  each limited to 100 clusters (EndpointSlice's default).
-* To correlate slices, producers MUST:
-  * set the same `multicluster.x-k8s.io/decision-key=<decision-key>` on all slices when more than one slice exists.
-* Producers may also:
-  * set `multicluster.x-k8s.io/placement-key=<placement-key>` on slices when the decision is workload scoped.
-* If a scheduler needs to preserve the order of selected clusters and the result spans multiple slices,
-  it should label each PlacementDecision with `multicluster.x-k8s.io/decision-index=<index>`
-  where <index> starts at 0 and increments by 1.
-  Consumers that require ordering can sort by this label.
+Following the [EndpointSlice](https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/) design, one
+scheduling decision can fan out to multiple `PlacementDecision` objects, each limited to 100 clusters. A revision that
+selects no clusters uses one empty slice.
+
+`decision-revision`, `decision-slice-count`, `decision-index`, and `decision-group-index` are decimal strings without a
+sign or leading zeros. `decision-revision` MUST fit in an `int64`. `decision-slice-count` MUST be between `1` and
+`1000`. `decision-index` and `decision-group-index` MUST be less than `decision-slice-count`.
+
+A revision is complete when all its slices carry the same `decision-slice-count` and it has exactly that many slices
+with unique `decision-index` values. A complete revision is valid when:
+
+- all slices have the same `schedulerName`
+- `placement-key` is absent from every slice or has the same non-empty value on every slice
+- group labels satisfy [Optional decision groups](#optional-decision-groups)
+- each (`clusterProfileRef.namespace`, `clusterProfileRef.name`) pair occurs once across the revision
+
+For example, revision 7 selects 370 clusters in three groups:
+
+| PlacementDecision | Clusters | `decision-revision` | `decision-slice-count` | `decision-index` | `decision-group-index` | `decision-group-name` |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| `my-service-v2-rollout-revision-7-slice-0` | 100 | `7` | `5` | `0` | `0` | `canary` |
+| `my-service-v2-rollout-revision-7-slice-1` | 50 | `7` | `5` | `1` | `0` | `canary` |
+| `my-service-v2-rollout-revision-7-slice-2` | 40 | `7` | `5` | `2` | `1` | `staging` |
+| `my-service-v2-rollout-revision-7-slice-3` | 100 | `7` | `5` | `3` | `2` | `production` |
+| `my-service-v2-rollout-revision-7-slice-4` | 80 | `7` | `5` | `4` | `2` | `production` |
+
+An adapter for an
+[Open Cluster Management (OCM) `PlacementDecision`](https://github.com/open-cluster-management-io/api/blob/main/cluster/v1beta1/types_placementdecision.go)
+derives `decision-index` from the placement-wide slice order and MUST NOT copy the OCM group index into it. It MUST omit
+the group labels when the OCM `Placement` defines no decision strategy.
 
 #### Lifecycle
 
-- **Create**: The scheduler creates one or more slices with the list of clusters in the decision.
-  To enable discovery, it should choose either or both:
-  - **Label selector** correlation: set `multicluster.x-k8s.io/decision-key=<decision-key>` on every slice when there are multiple slices;
-    optionally set `multicluster.x-k8s.io/placement-key=<placement-key>` when workload scoped, and
-    `multicluster.x-k8s.io/decision-index` when order matters.
-  - **Deterministic naming** correlation: use a deterministic naming pattern and set `multicluster.x-k8s.io/decision-index`
-    when order matters (label is optional).
-  The scheduler may populate the reason for each decision for debugging/auditing.
-
-- **Update / Reschedule**: The scheduler may add or remove clusters in decisions at any time.
-  If the number of target clusters crosses the 100 limit,
-  it must create or delete slices to maintain the slicing rule.
-  If order changes, update decision-index values accordingly so consumers can detect the new order.
-
-  Consumer Actions on Updates:
-  - **Clusters Added**: Consumer should deploy workloads to the newly added clusters
-    (ie, create `Work` objects targeting new clusters).
-  - **Clusters Removed**: Consumer should remove workloads from clusters no longer in the decision list
-    (ie, delete `Work` objects, drain workloads).
-
-  If heavy churn is a concern, a scheduler may treat `decisions` as an unordered set and
-  maintain it in a deterministic order (ie, alphabetical sorting).
-  When the cluster set itself has not changed, this stable ordering produces an identical set of clusters,
-  so the API server skips the write and no extra change events reach consumers.
-
+- **Create**: The first revision of a decision key is `0`. The scheduler creates the slices described in
+  [Slicing](#slicing) in any order.
+- **Reschedule**: A changed decision is published as a higher revision in new slices. The scheduler deletes older
+  revisions only after the replacement is complete and valid. Consumers ignore that deletion.
 - **Delete**: When a scheduling decision is no longer required
   (application/workload lifecycle ended, policy changes, or scheduler shutdown/replacement),
   the scheduler deletes every related `PlacementDecision` slice.
@@ -510,6 +542,8 @@ Controllers may implement both options simultaneously.
   The consumers of the `PlacementDecision` MUST treat the object as read only (`get`, `list`, `watch`).
 - RBAC will enforce this contract by granting the scheduler write verbs on `PlacementDecisions`,
   while limiting consumers to read only access.
+- Mutually untrusted producers MUST use separate namespaces. Producers that share a namespace MUST NOT write the same
+  decision key.
 
 #### Relationship to other SIG-Multicluster (SIG-MC) APIs
 
@@ -565,8 +599,8 @@ implementing this enhancement to ensure the enhancements have also solid foundat
 
 #### Alpha
 
-- A CRD definition and generated client.
-- A dummy controller and unit test to validate the CRD and client.
+- A CRD definition, generated client, and validating admission webhook.
+- A dummy controller and unit test to validate the CRD, client, and webhook.
 
 #### Beta
 
@@ -612,7 +646,7 @@ Additive-only until GA; optional fields carry defaults; no disruptive schema cha
 
 ### Version Skew Strategy
 
-Older consumers ignore unknown fields; older schedulers remain valid. Label contracts stable from alpha.
+Older consumers ignore unknown fields. Label contracts stable from alpha.
 
 ## Production Readiness Review Questionnaire
 
@@ -624,7 +658,8 @@ Older consumers ignore unknown fields; older schedulers remain valid. Label cont
   - Feature gate name:
   - Components depending on the feature gate:
 - [x] Other
-  - Describe the mechanism:
+  - Describe the mechanism: install the `PlacementDecision` CRD and its validating admission webhook alongside the
+    `ClusterProfile` API.
   - Will enabling / disabling the feature require downtime of the control
     plane?
   - Will enabling / disabling the feature require downtime or reprovisioning
@@ -638,8 +673,8 @@ Older consumers ignore unknown fields; older schedulers remain valid. Label cont
 
 ###### Can the feature be disabled once it has been enabled (i.e. can we roll back the enablement)?
 
-- Yes, as this feature only describes a CRD, it can most directly be
-  disabled by uninstalling the CRD.
+- Yes, as this feature only describes a CRD and its validating admission webhook,
+  it can most directly be disabled by uninstalling them.
 
 ###### What happens if we reenable the feature if it was previously rolled back?
 
@@ -692,6 +727,8 @@ Older consumers ignore unknown fields; older schedulers remain valid. Label cont
 
 ###### Does this feature depend on any specific services running in the cluster?
 
+Yes, the `ClusterProfile` API.
+
 ### Scalability
 
 ###### Will enabling / using this feature result in any new API calls?
@@ -720,10 +757,13 @@ Older consumers ignore unknown fields; older schedulers remain valid. Label cont
 
 ## Drawbacks
 
+- Every create depends on a fail-closed out-of-tree webhook, which adds admission latency and blocks publication when it
+  is unavailable.
+
 ## Alternatives
 
 - Status quo: every multicluster provider/scheduler ships its own API leads to consumer bloat and vendor lock-in.
 
-- Extending `Work API`: overloads a workload syncner API with scheduling details which couples the where with the what.
+- Extending `Work API`: overloads a workload syncer API with scheduling details which couples the where with the what.
 
 ## Infrastructure Needed (Optional)
