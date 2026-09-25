@@ -1,0 +1,17 @@
+title: ClusterProfile AddOn API
+kep-number: NNNN
+authors:
+  - "@kahirokunn"
+owning-sig: sig-multicluster
+status: provisional
+creation-date: 2026-09-24
+reviewers:
+  - "@mikeshng"
+approvers:
+  - "@jeremyot"
+  - "@skitt"
+
+see-also:
+  - "/keps/sig-multicluster/4322-cluster-inventory"
+
+stage: alpha
