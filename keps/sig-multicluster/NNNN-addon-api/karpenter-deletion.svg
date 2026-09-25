@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 585" role="img" aria-labelledby="title description">
+  <title id="title">Karpenter Addon deletion outcomes</title>
+  <desc id="description">Orphan clears the Addon finalizer and leaves Karpenter and its resources in place. Delete keeps Karpenter and the Addon finalizer until dependent resources are gone. The Block cleanup policy waits for users to remove them; the Delete cleanup policy asks the manager to remove them. Karpenter is then uninstalled and the finalizer cleared.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#595959"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="960" height="585" fill="#ffffff"/>
+  <text x="480" y="36" font-family="Arial, sans-serif" font-size="22" text-anchor="middle" fill="#202020">What happens when the Addon is deleted?</text>
+  <rect x="345" y="65" width="270" height="60" fill="#fff2cc" stroke="#595959"/>
+  <text x="480" y="90" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#202020">Delete the Addon</text>
+  <text x="480" y="109" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">karpenter-cluster-a</text>
+  <path d="M 405 127 V 147 H 172 V 163" fill="none" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <path d="M 555 127 V 147 H 627 V 163" fill="none" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="165" width="265" height="390" fill="#f3f3f3" stroke="#595959"/>
+  <text x="172" y="199" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#202020">deletionPolicy: Orphan</text>
+  <rect x="63" y="232" width="219" height="105" fill="#ffffff" stroke="#595959"/>
+  <text x="172" y="259" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Leave Karpenter,</text>
+  <text x="172" y="282" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">NodePools, NodeClaims,</text>
+  <text x="172" y="305" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Nodes, and instances</text>
+  <line x1="172" y1="339" x2="172" y2="389" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="63" y="392" width="219" height="72" fill="#d9ead3" stroke="#595959"/>
+  <text x="172" y="419" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Clear Addon finalizer</text>
+  <text x="172" y="441" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Addon is deleted</text>
+
+  <rect x="335" y="165" width="585" height="390" fill="#f8f8f8" stroke="#595959"/>
+  <text x="627" y="199" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#202020">deletionPolicy: Delete</text>
+  <rect x="355" y="222" width="250" height="98" fill="#fff2cc" stroke="#595959"/>
+  <text x="480" y="246" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Cleanup policy</text>
+  <text x="480" y="268" font-family="Arial, sans-serif" font-size="17" text-anchor="middle" fill="#202020">Block</text>
+  <text x="480" y="296" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Users remove resources</text>
+  <rect x="645" y="222" width="250" height="98" fill="#cfe2f3" stroke="#595959"/>
+  <text x="770" y="246" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Cleanup policy</text>
+  <text x="770" y="268" font-family="Arial, sans-serif" font-size="17" text-anchor="middle" fill="#202020">Delete</text>
+  <text x="770" y="296" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Manager removes resources</text>
+  <line x1="480" y1="322" x2="480" y2="350" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="770" y1="322" x2="770" y2="350" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="430" y="352" width="395" height="70" fill="#ffffff" stroke="#595959"/>
+  <text x="627" y="376" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Wait until dependent resources are gone</text>
+  <text x="627" y="399" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Karpenter + Addon finalizer stay</text>
+  <line x1="627" y1="424" x2="627" y2="466" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="460" y="468" width="334" height="55" fill="#d9ead3" stroke="#595959"/>
+  <text x="627" y="491" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Uninstall Karpenter</text>
+  <text x="627" y="510" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Clear Addon finalizer</text>
+  <text x="627" y="545" font-family="Arial, sans-serif" font-size="13" text-anchor="middle" fill="#202020">Examples: NodePool, NodeClaim, other dependent kinds</text>
+</svg>

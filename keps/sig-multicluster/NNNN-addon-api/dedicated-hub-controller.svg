@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400" role="img" aria-labelledby="title description">
+  <title id="title">Dedicated add-on controller on the hub</title>
+  <desc id="description">The Addon, its selected manager, and a controller dedicated to this Addon are on the hub. The manager creates the controller, which manages add-on resources on cluster-a.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#595959"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #202020; }
+    .zone { stroke: #595959; }
+    .zone-label { font-size: 16px; }
+    .card { stroke: #595959; }
+    .name { font-size: 15px; text-anchor: middle; }
+    .detail { font-size: 12px; text-anchor: middle; }
+    .flow { fill: none; stroke: #595959; stroke-width: 1.5; marker-end: url(#arrow); }
+  </style>
+  <rect width="1100" height="400" fill="#ffffff"/>
+  <rect class="zone" x="30" y="68" width="460" height="290" fill="#eeeeee"/>
+  <text class="zone-label" x="50" y="96">Hub cluster</text>
+  <rect class="zone" x="540" y="68" width="530" height="290" fill="#f8f8f8"/>
+  <text class="zone-label" x="560" y="96">Target cluster: cluster-a</text>
+  <rect class="card" x="60" y="120" width="175" height="70" fill="#fff2cc"/>
+  <text class="name" x="147" y="149">Addon</text>
+  <text class="detail" x="147" y="169">cluster-a</text>
+  <rect class="card" x="285" y="120" width="175" height="70" fill="#cfe2f3"/>
+  <text class="name" x="372" y="159">Selected manager</text>
+  <rect class="card" x="275" y="255" width="185" height="70" fill="#d9ead3"/>
+  <text class="name" x="367" y="284">Per-Addon</text>
+  <text class="name" x="367" y="304">controller</text>
+  <rect class="card" x="690" y="255" width="230" height="70" fill="#ffffff"/>
+  <text class="name" x="805" y="294">Add-on resources</text>
+  <path class="flow" d="M 237 155 H 283"/>
+  <path class="flow" d="M 372 192 V 253"/>
+  <path class="flow" d="M 462 290 H 688"/>
+</svg>

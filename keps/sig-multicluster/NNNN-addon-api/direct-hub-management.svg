@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400" role="img" aria-labelledby="title description">
+  <title id="title">Manager on the hub directly manages cluster-a</title>
+  <desc id="description">An Addon and its selected manager are on the hub cluster. The manager directly manages add-on resources on the target cluster, cluster-a, without a separate add-on controller.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#595959"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #202020; }
+    .zone { stroke: #595959; }
+    .zone-label { font-size: 16px; }
+    .card { stroke: #595959; }
+    .name { font-size: 15px; text-anchor: middle; }
+    .detail { font-size: 12px; text-anchor: middle; }
+    .flow { fill: none; stroke: #595959; stroke-width: 1.5; marker-end: url(#arrow); }
+  </style>
+  <rect width="1100" height="400" fill="#ffffff"/>
+  <rect class="zone" x="30" y="68" width="460" height="290" fill="#eeeeee"/>
+  <text class="zone-label" x="50" y="96">Hub cluster</text>
+  <rect class="zone" x="540" y="68" width="530" height="290" fill="#f8f8f8"/>
+  <text class="zone-label" x="560" y="96">Target cluster: cluster-a</text>
+  <rect class="card" x="60" y="155" width="175" height="70" fill="#fff2cc"/>
+  <text class="name" x="147" y="184">Addon</text>
+  <text class="detail" x="147" y="204">cluster-a</text>
+  <rect class="card" x="285" y="155" width="175" height="70" fill="#cfe2f3"/>
+  <text class="name" x="372" y="194">Selected manager</text>
+  <rect class="card" x="690" y="155" width="230" height="70" fill="#ffffff"/>
+  <text class="name" x="805" y="194">Add-on resources</text>
+  <path class="flow" d="M 237 190 H 283"/>
+  <path class="flow" d="M 462 190 H 688"/>
+</svg>

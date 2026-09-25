@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400" role="img" aria-labelledby="title description">
+  <title id="title">External manager delegates to the EKS add-on API</title>
+  <desc id="description">An Addon is declared on the hub. Its selected manager runs outside both clusters and requests installation through the external EKS add-on API. The EKS service provides add-on functionality on cluster-a.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#595959"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #202020; }
+    .zone { stroke: #595959; }
+    .zone-label { font-size: 16px; }
+    .card { stroke: #595959; }
+    .name { font-size: 15px; text-anchor: middle; }
+    .detail { font-size: 12px; text-anchor: middle; }
+    .flow { fill: none; stroke: #595959; stroke-width: 1.5; marker-end: url(#arrow); }
+  </style>
+  <rect width="1100" height="400" fill="#ffffff"/>
+  <rect class="zone" x="30" y="68" width="310" height="290" fill="#eeeeee"/>
+  <text class="zone-label" x="50" y="96">Hub cluster</text>
+  <rect class="zone" x="380" y="68" width="340" height="290" fill="#f3f3f3"/>
+  <text class="zone-label" x="400" y="96">Outside both clusters</text>
+  <rect class="zone" x="760" y="68" width="310" height="290" fill="#f8f8f8"/>
+  <text class="zone-label" x="780" y="96">Target cluster: cluster-a</text>
+  <rect class="card" x="65" y="140" width="220" height="70" fill="#fff2cc"/>
+  <text class="name" x="175" y="169">Addon</text>
+  <text class="detail" x="175" y="189">cluster-a</text>
+  <rect class="card" x="430" y="140" width="220" height="70" fill="#cfe2f3"/>
+  <text class="name" x="540" y="179">Selected manager</text>
+  <rect class="card" x="430" y="260" width="220" height="70" fill="#e4dff2"/>
+  <text class="name" x="540" y="299">EKS add-on API</text>
+  <rect class="card" x="810" y="260" width="210" height="70" fill="#ffffff"/>
+  <text class="name" x="915" y="299">Add-on functionality</text>
+  <path class="flow" d="M 287 175 H 428"/>
+  <path class="flow" d="M 540 212 V 258"/>
+  <path class="flow" d="M 652 295 H 808"/>
+</svg>
