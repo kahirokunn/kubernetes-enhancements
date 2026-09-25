@@ -1,0 +1,18 @@
+title: Multicluster Addon Management API
+kep-number: NNNN
+authors:
+  - "@kahirokunn"
+owning-sig: sig-multicluster
+status: provisional
+creation-date: 2026-09-24
+reviewers:
+  - TBD
+approvers:
+  - TBD
+
+see-also:
+  - "/keps/sig-multicluster/4322-cluster-inventory"
+  - "/keps/sig-multicluster/5313-placement-decision-api"
+  - "/keps/sig-multicluster/NNNN-addon-observation-api"
+
+stage: alpha
