@@ -1,0 +1,17 @@
+title: Placement Rollout Strategy API
+kep-number: NNNN
+authors:
+  - "@kahirokunn"
+owning-sig: sig-multicluster
+status: provisional
+creation-date: 2026-10-01
+reviewers:
+  - TBD
+approvers:
+  - TBD
+
+see-also:
+  - "/keps/sig-multicluster/4322-cluster-inventory"
+  - "/keps/sig-multicluster/5313-placement-decision-api"
+
+stage: alpha
