@@ -2,11 +2,11 @@ title: ClusterProfile AddOn API
 kep-number: NNNN
 authors:
   - "@kahirokunn"
+  - "@mikeshng"
 owning-sig: sig-multicluster
 status: provisional
 creation-date: 2026-09-24
-reviewers:
-  - "@mikeshng"
+reviewers: []
 approvers:
   - "@jeremyot"
   - "@skitt"

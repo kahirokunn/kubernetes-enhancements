@@ -4,6 +4,8 @@
 - [Release Signoff Checklist](#release-signoff-checklist)
 - [Summary](#summary)
 - [Motivation](#motivation)
+  - [Terminology](#terminology)
+  - [Existing Add-on Systems](#existing-add-on-systems)
   - [Relationship to the Work API](#relationship-to-the-work-api)
   - [Examples of AddOn Functionality](#examples-of-addon-functionality)
   - [Goals](#goals)
@@ -111,10 +113,11 @@ responsible for providing the functionality and can supply shared configuration.
 Projects and platform teams can offer their AddOn Managers through a common
 interface. Clients that adopt the API can create, update, and delete AddOns
 and read their status across implementations. Multicluster platforms such as
-Open Cluster Management, Fleet, and Clusternet could adopt the API as a
-foundation for an [AddOn Catalog](#examples-of-addon-functionality). Each AddOn
-Manager defines its own parameters, installation mechanisms, and access
-requirements.
+[Open Cluster Management](https://open-cluster-management.io/),
+[KubeFleet](https://kubefleet.dev/), and [Clusternet](https://clusternet.io/)
+could adopt the API as a foundation for an [AddOn
+Catalog](#examples-of-addon-functionality). Each AddOn Manager defines its own
+parameters, installation mechanisms, and access requirements.
 
 The API also supports a [single
 cluster](#example-addon-on-the-local-cluster). An AddOn Manager chooses how to
@@ -124,17 +127,52 @@ or an external service.
 
 ## Motivation
 
-A dashboard or controller that supports several add-on systems needs a
-separate integration for each system's target references, request API, and
-status model. This API gives that client one way to create and manage AddOns
-and interpret the results last reported by each AddOn Manager through standard
-conditions.
+SIG-Multicluster APIs cover several parts of multicluster management:
 
-ClusterProfile identifies a cluster and provides access information. AddOn
-records a request for functionality on that cluster and the installation
-status. In the [hosted Karpenter
-example](#implementation-example-karpenter-and-dependent-resources), a client
-requests Node provisioning while the AddOn Manager runs Karpenter on a hub.
+- [ClusterProfile](../4322-cluster-inventory/README.md) identifies a cluster and
+  provides access information.
+- [PlacementDecision](../5313-placement-decision-api/README.md) lists the
+  clusters that a scheduler selected.
+- The [Work
+  API](https://github.com/kubernetes-sigs/work-api/blob/906c7aceb01dd261174b6eaa0687d283309a98df/docs/proposals/20210219-work-api.md)
+  groups Kubernetes resource manifests for delivery to a managed cluster.
+- The [About API](../2149-clusterid/README.md) stores cluster metadata, such as
+  the cluster ID, in `ClusterProperty` resources.
+- The [Multi-Cluster Services API](../1645-multi-cluster-services-api/README.md)
+  makes Services exported from one cluster available to other clusters.
+
+None of these APIs defines what functionality a cluster should have, such as
+certificate management or metrics collection, or reports whether the cluster
+provides it.
+
+### Terminology
+
+- **Add-on**: Software that [extends the functionality of a Kubernetes
+  cluster](https://kubernetes.io/docs/concepts/cluster-administration/addons/),
+  such as DNS, Pod networking, certificate management, or metrics collection.
+- **Add-on system**: An API or tool that lets users request an add-on for a
+  cluster and reports its status.
+- **Add-on catalog**: The list of add-ons that an add-on system offers.
+
+### Existing Add-on Systems
+
+Add-on systems are common, but each requests add-ons, lists them, and reports
+their status in its own way:
+
+| Add-on system | Request | Catalog | Status |
+| --- | --- | --- | --- |
+| [Open Cluster Management](https://open-cluster-management.io/docs/developer-guides/addon/) | `ManagedClusterAddOn` | `ClusterManagementAddOn` | `ManagedClusterAddOn` conditions |
+| [Amazon Elastic Kubernetes Service add-ons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html) | `CreateAddon` API | `DescribeAddonVersions` API | Add-on `status` and `health` |
+| [Google Kubernetes Engine add-ons](https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters#addonsconfig) | Cluster `addonsConfig` field | `AddonsConfig` fields | Cluster status |
+| [Cluster API Add-on Provider for Helm](https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm/blob/v0.6.4/docs/quick-start.md) | `HelmChartProxy` | None | `HelmReleaseProxy` status |
+| [minikube](https://minikube.sigs.k8s.io/docs/commands/addons/) | `minikube addons enable` | `minikube addons list` | `minikube addons list` |
+
+With AddOn and AddOnClass:
+
+- Multicluster platforms can offer the add-ons of their add-on systems through
+  AddOnClasses, so any client that supports the API can request them.
+- Clients, such as developer portals and controllers that set up new clusters,
+  can request add-ons and read their status through one API.
 
 For example, an operator updating an OpenTelemetry Collector across a fleet
 needs to distinguish a cluster where the new configuration was applied from
@@ -144,11 +182,8 @@ through standard AddOn conditions.
 
 ### Relationship to the Work API
 
-The [Work
-API](https://github.com/kubernetes-sigs/work-api/blob/906c7aceb01dd261174b6eaa0687d283309a98df/docs/proposals/20210219-work-api.md)
-groups Kubernetes resource manifests for delivery to a managed cluster. Work
-and higher-level controllers can address targeting, configuration, status
-reporting, and cleanup for an add-on.
+The Work API and higher-level controllers can address targeting,
+configuration, status reporting, and cleanup for an add-on.
 
 The ClusterProfile AddOn API standardizes requests for add-on functionality
 and the lifecycle and status reported by the selected AddOn Manager.
@@ -164,7 +199,9 @@ An AddOn Manager can use Work to deliver resources and separately manage a
 hosted controller or an external service. It remains responsible for AddOn
 status and cleanup across those locations. This lets users request hosted or
 serverless functionality without describing the components or choosing where
-they run. The [implementation patterns](#implementation-patterns) illustrate
+they run. The [implementation patterns](#implementation-patterns) and the
+[hosted Karpenter
+example](#implementation-example-karpenter-and-dependent-resources) illustrate
 these choices.
 
 ### Examples of AddOn Functionality
@@ -453,8 +490,8 @@ The UPDATE webhook uses `failurePolicy: Fail` and needs read access to
 AddOnClasses across namespaces. While it is unavailable, AddOn updates are
 rejected, including updates that do not change `classRef`; status subresource
 updates do not invoke it. Admission cannot protect against an AddOnClass
-changing after an AddOn update, so the AddOn Manager checks AddOnClass identity
-again during reconciliation.
+changing after an AddOn update, so the AddOn Manager checks again during
+reconciliation that the AddOnClass selects it.
 
 The selected AddOn Manager SHOULD keep a finalizer on an AddOnClass while any
 AddOn references it, including AddOns in other namespaces. It removes that
@@ -627,7 +664,7 @@ overview](#api-overview) describes the users and client applications.
 
 An AddOn Manager could use Work for resource delivery, multicluster-runtime for
 reconciliation, an Open Cluster Management `AddOnTemplate`, or existing add-on
-mechanisms in Amazon Elastic Kubernetes Service, Google Kubernetes Engine, or
+systems in Amazon Elastic Kubernetes Service, Google Kubernetes Engine, or
 OpenShift. Each integration needs an AddOn Manager that maps requests,
 installation state, and cleanup to this contract.
 
@@ -952,28 +989,31 @@ AddOn Manager conformance tests cover:
 #### Alpha
 
 - Define the two CRDs and admission behavior, and implement one AddOn Manager.
-- Exercise identity, parameters, status, target changes, and deletion through
-  the Test Plan.
+- Exercise AddOn Manager selection, parameters, status, target changes, and
+  deletion through the Test Plan.
 
 #### Beta
 
-- Publish a conformance suite for the shared status, identity, and deletion
-  contract. Run it against at least two independent AddOn Managers with different
-  installation mechanisms.
-- Show that one client application can evaluate AddOns from both AddOn Managers
-  without reading their implementation-specific resources.
+- At least two independent AddOn Managers with different installation
+  mechanisms and one client application, such as a developer portal, using the
+  ClusterProfile AddOn API. For AddOns that each AddOn Manager reconciles, the
+  client application uses only their [five standard
+  conditions](#status-contract) to determine whether the requested
+  installation is applied, current, and usable.
+- Publish a conformance suite for the shared status, AddOn Manager selection,
+  and deletion contract. Run it against these AddOn Managers.
 - Measure failure and scale limits, including access loss, AddOn Manager restart,
-  parameter changes, and blocked cleanup. Resolve contract differences found
-  by these tests.
+  parameter changes, and blocked cleanup. Update the status and deletion rules
+  where AddOn Managers interpret them differently in these tests.
 
 #### GA
 
 - Keep status and deletion semantics compatible across supported API versions.
   Test conversion of persisted AddOn specs and conditions if a new storage
   version is introduced.
-- Demonstrate conformance and version-change behavior with independent
-  AddOn Managers, and incorporate production feedback before declaring the API
-  stable.
+- Show that independent AddOn Managers pass the conformance suite and follow
+  the [Version Skew Strategy](#version-skew-strategy). Incorporate production
+  feedback before declaring the API stable.
 
 ### Upgrade / Downgrade Strategy
 
@@ -1189,15 +1229,10 @@ A cluster-scoped AddOnClass would let every inventory select the same
 AddOnClass without a namespace in `classRef`, but creating or changing it would
 require cluster-wide permissions.
 
-Users could use existing installation APIs directly. For example, [Open
-Cluster Management
-ManagedClusterAddOn](https://open-cluster-management.io/docs/developer-guides/addon/)
-is associated with an Open Cluster Management ManagedCluster, [Flux
+Users could use the [existing add-on systems](#existing-add-on-systems) or
+other installation APIs directly. For example, [Flux
 HelmRelease](https://fluxcd.io/flux/components/helm/helmreleases/) can use
-`spec.kubeConfig` for a remote cluster, and the [Amazon Elastic Kubernetes
-Service add-on
-API](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html)
-identifies a cluster by `clusterName`. An AddOn Manager could integrate with
+`spec.kubeConfig` for a remote cluster. An AddOn Manager could integrate with
 each of these APIs. A client using them directly must interpret each target
 reference and status model; an AddOn gives it one ClusterProfile target and
 one condition contract.
