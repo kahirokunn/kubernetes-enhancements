@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 598" role="img" aria-labelledby="title description">
+  <title id="title">Karpenter for cluster-a with its controller on the hub</title>
+  <desc id="description">The hub holds the AddOn, its selected AddOn Manager, and the Karpenter controller. ClusterProfile cluster-a identifies the cluster receiving Karpenter functionality. The AddOn Manager configures CRDs and access resources on cluster-a, and the controller accesses its API. No Karpenter controller Pods run on cluster-a, which still holds the required resources and user Pods. A user-created NodePool leads to a Karpenter-created NodeClaim, or a user creates a NodeClaim directly. Both paths can provision a Node and cloud instance.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#595959"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1100" height="598" fill="#ffffff"/>
+  <text x="550" y="37" font-family="Arial, sans-serif" font-size="22" text-anchor="middle" fill="#202020">Karpenter for cluster-a: controller on the hub</text>
+
+  <rect x="30" y="68" width="460" height="510" fill="#eeeeee" stroke="#595959"/>
+  <text x="50" y="96" font-family="Arial, sans-serif" font-size="16" fill="#202020">Hub cluster</text>
+  <rect x="60" y="135" width="175" height="72" fill="#fff2cc" stroke="#595959"/>
+  <text x="147" y="164" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">AddOn</text>
+  <text x="147" y="184" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">karpenter-cluster-a</text>
+  <rect x="275" y="135" width="185" height="72" fill="#cfe2f3" stroke="#595959"/>
+  <text x="367" y="164" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">AddOn Manager</text>
+  <text x="367" y="184" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">reconciles the request</text>
+  <line x1="237" y1="171" x2="273" y2="171" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="275" y="275" width="185" height="80" fill="#d9ead3" stroke="#595959"/>
+  <text x="367" y="307" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#202020">Karpenter controller</text>
+  <text x="367" y="331" font-family="Arial, sans-serif" font-size="13" text-anchor="middle" fill="#202020">runs on the hub</text>
+  <path d="M 367 209 V 273" fill="none" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="397" y="248" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">installs</text>
+
+  <rect x="60" y="454" width="400" height="90" fill="#ffffff" stroke="#595959"/>
+  <text x="260" y="483" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">ClusterProfile in fleet-prod</text>
+  <text x="260" y="513" font-family="Arial, sans-serif" font-size="13" text-anchor="middle" fill="#202020">cluster-a = AddOn's target</text>
+
+  <rect x="540" y="68" width="530" height="510" fill="#f8f8f8" stroke="#595959"/>
+  <text x="560" y="96" font-family="Arial, sans-serif" font-size="16" fill="#202020">Target cluster: cluster-a</text>
+  <rect x="600" y="135" width="410" height="72" fill="#ffffff" stroke="#595959"/>
+  <text x="805" y="164" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Karpenter CRDs and access resources</text>
+  <text x="805" y="187" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">required target resources managed for this AddOn</text>
+  <line x1="462" y1="171" x2="598" y2="171" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="495" y="145" width="70" height="17" fill="#ffffff"/>
+  <text x="530" y="158" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">configures</text>
+
+  <rect x="600" y="275" width="410" height="80" fill="#ffffff" stroke="#595959"/>
+  <text x="805" y="307" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">Target API server</text>
+  <text x="805" y="331" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">NodePools, NodeClaims, pending Pods</text>
+  <path d="M 462 315 H 598" fill="none" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="472" y="292" width="116" height="17" fill="#ffffff"/>
+  <text x="530" y="305" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">remote API access</text>
+
+  <rect x="600" y="225" width="410" height="35" fill="#fff2cc" stroke="#595959"/>
+  <text x="805" y="248" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">No Karpenter controller Pods on cluster-a</text>
+
+  <rect x="565" y="390" width="140" height="76" fill="#cfe2f3" stroke="#595959"/>
+  <text x="635" y="419" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">NodePool</text>
+  <text x="635" y="442" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">created by user</text>
+  <rect x="735" y="390" width="140" height="76" fill="#e4dff2" stroke="#595959"/>
+  <text x="805" y="419" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">NodeClaim</text>
+  <text x="805" y="442" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">by Karpenter</text>
+  <rect x="905" y="390" width="140" height="76" fill="#ffffff" stroke="#595959"/>
+  <text x="975" y="418" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">Node + cloud</text>
+  <text x="975" y="440" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#202020">instance</text>
+  <line x1="707" y1="428" x2="733" y2="428" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="877" y1="428" x2="903" y2="428" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="735" y="490" width="140" height="64" fill="#e4dff2" stroke="#595959"/>
+  <text x="805" y="515" font-family="Arial, sans-serif" font-size="15" text-anchor="middle" fill="#202020">NodeClaim</text>
+  <text x="805" y="538" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#202020">created by user</text>
+  <path d="M 877 522 H 975 V 468" fill="none" stroke="#595959" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>
