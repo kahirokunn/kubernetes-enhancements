@@ -8,9 +8,14 @@
   - [Existing Add-on Systems](#existing-add-on-systems)
   - [Relationship to the Work API](#relationship-to-the-work-api)
   - [Examples of AddOn Functionality](#examples-of-addon-functionality)
+  - [Add-on Types](#add-on-types)
   - [Goals](#goals)
   - [Non-Goals](#non-goals)
 - [Proposal](#proposal)
+  - [User Stories](#user-stories)
+    - [Story 1: Self-service add-ons](#story-1-self-service-add-ons)
+    - [Story 2: Status and troubleshooting](#story-2-status-and-troubleshooting)
+    - [Story 3: Transparent to clients](#story-3-transparent-to-clients)
   - [API Overview](#api-overview)
   - [Users and Resources](#users-and-resources)
   - [Risks and Mitigations](#risks-and-mitigations)
@@ -104,28 +109,35 @@ Items marked with (R) are required *prior to targeting to a milestone / release*
 
 ## Summary
 
-The proposed ClusterProfile AddOn API lets users and applications request
-functionality such as metrics collection, certificate management, or Node
-provisioning for a Kubernetes cluster. An `AddOn` references the target
-cluster's [`ClusterProfile`](../4322-cluster-inventory/README.md) and records
-the request and its status. An `AddOnClass` selects the AddOn Manager
-responsible for providing the functionality and can supply shared parameters.
+Platform administrators need to distinguish an add-on request with invalid
+configuration, an update still in progress, and an installation that is current
+but unusable. The proposed ClusterProfile AddOn API gives them common
+conditions for these observations across AddOn Manager implementations. This
+lets a dashboard display the state of metrics collection, certificate
+management, or Node provisioning without interpreting each add-on system's
+status model.
 
-Projects and platform teams can implement AddOn Managers and offer add-on
-functionality through AddOnClasses. Clients that adopt the API can create,
-update, and delete AddOns and read their status across implementations.
-Multicluster platforms such as [Open Cluster Management](https://open-cluster-management.io/),
-[KubeFleet](https://kubefleet.dev/), and [Clusternet](https://clusternet.io/)
-could adopt the API as a foundation for an [add-on
-catalog](#examples-of-addon-functionality). Each AddOn Manager defines its own
-parameters, installation mechanisms, and access requirements.
+An `AddOn` records a request for one target cluster, identified by its
+[`ClusterProfile`](../4322-cluster-inventory/README.md), and the AddOn Manager's
+observations of that request. A platform administrator offers functionality
+through an `AddOnClass`, selecting the responsible AddOn Manager and optional
+shared parameters. A platform user selects that AddOnClass and optional
+per-AddOn parameters. Both read AddOn status to identify requests that need
+attention.
 
-The API also supports a [local cluster](#local-cluster). An AddOn Manager chooses how to
-provide the requested functionality, including through hosted or serverless
-implementations. For example, it can use components on the target or a hub,
-or an external service.
+Each AddOn Manager defines its parameters, installation mechanisms, access
+requirements, and health checks. It can provide hosted or serverless
+functionality using components on the target, on another cluster, or in an
+external service. The API also supports a [local cluster](#local-cluster).
 
 ## Motivation
+
+Today, a platform administrator may need to read one API for a certificate
+management installation and another for a metrics collection installation.
+A dashboard must interpret each system's status to answer the same questions:
+was the request accepted, is its configuration usable, has it been applied, is
+the installation current, and is the functionality available? Adding another
+add-on system repeats this integration work.
 
 SIG-Multicluster APIs cover several parts of multicluster management:
 
@@ -134,7 +146,7 @@ SIG-Multicluster APIs cover several parts of multicluster management:
 - [PlacementDecision](../5313-placement-decision-api/README.md) lists the
   clusters that a scheduler selected.
 - The [Work
-  API](https://github.com/kubernetes-sigs/work-api/blob/906c7aceb01dd261174b6eaa0687d283309a98df/docs/proposals/20210219-work-api.md)
+  API](https://github.com/kubernetes/enhancements/pull/6457)
   groups Kubernetes resource manifests for delivery to a managed cluster.
 - The [About API](../2149-clusterid/README.md) stores cluster metadata, such as
   the cluster ID, in `ClusterProperty` resources.
@@ -147,16 +159,24 @@ provides it.
 
 ### Terminology
 
-- Add-on: Software that [extends the functionality of a Kubernetes
+- Add-on: [Software, Kubernetes objects, or a service](#add-on-types) that
+  [extends the functionality of a Kubernetes
   cluster](https://kubernetes.io/docs/concepts/cluster-administration/addons/),
-  such as DNS, Pod networking, certificate management, or metrics collection.
+  such as CRDs, network policies, DNS, Pod networking, certificate management,
+  or metrics collection.
 
 - Add-on system: An API or tool that lets users request an add-on for a
   cluster and reports its status.
 
 - Add-on catalog: The list of add-ons that an add-on system offers.
 
-- AddOn: A namespaced API resource through which a user or application
+- Platform administrator: A person or team that decides which add-ons a
+  platform's clusters can have and how they are provided.
+
+- Platform user: A person or team that uses a platform's clusters and requests
+  the add-ons they need from those the platform offers.
+
+- AddOn: A namespaced API resource through which a platform user or client
   requests functionality for one ClusterProfile and observes its status.
 
 - AddOnClass: A namespaced API resource through which a platform
@@ -205,43 +225,30 @@ their status in its own way:
 | [Cluster API Add-on Provider for Helm](https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm/blob/v0.6.4/docs/quick-start.md) | `HelmChartProxy` | None | `HelmReleaseProxy` status |
 | [minikube](https://minikube.sigs.k8s.io/docs/commands/addons/) | `minikube addons enable` | `minikube addons list` | `minikube addons list` |
 
-With AddOn and AddOnClass:
-
-- Multicluster platforms can offer the add-ons of their add-on systems through
-  AddOnClasses, so any client that supports the API can request them.
-- Clients, such as developer portals and controllers that set up new clusters,
-  can request add-ons and read their status through one API.
-
-For example, an operator updating an OpenTelemetry Collector across a fleet
-needs to distinguish a cluster where the new configuration was applied from
-one still running the old configuration, and from one where the OpenTelemetry
-Collector is current but unhealthy. The AddOn Manager reports these outcomes
-through standard conditions on each AddOn.
+Platform teams and multicluster projects can implement AddOn Managers to
+expose their offerings through AddOnClasses. Platforms such as
+[Open Cluster Management](https://open-cluster-management.io/),
+[KubeFleet](https://kubefleet.dev/), and [Clusternet](https://clusternet.io/)
+could use this API for an [add-on catalog](#examples-of-addon-functionality).
 
 ### Relationship to the Work API
 
 The Work API and higher-level controllers can address targeting,
-configuration, status reporting, and cleanup for an add-on.
-
-The ClusterProfile AddOn API standardizes requests for add-on functionality
-and the lifecycle and status reported by the selected AddOn Manager.
+configuration, status reporting, and cleanup for an add-on. The APIs differ in
+what they describe:
 
 | Question | Work API | ClusterProfile AddOn API |
 | --- | --- | --- |
 | What does the request describe? | Resource manifests to deliver to a managed cluster | Functionality offered by an AddOnClass for one ClusterProfile |
-| Who chooses the implementation and configuration? | The caller or a higher-level controller composes the manifests | Users select an AddOnClass and optional per-AddOn parameters through an AddOn. Administrators specify the manager and optional shared parameters in the AddOnClass. That manager chooses how to provide the functionality. |
+| Who chooses the implementation and configuration? | The caller or a higher-level controller composes the manifests | The platform administrator sets the AddOnClass's AddOn Manager and optional shared parameters. The platform user selects that AddOnClass and optional per-AddOn parameters. |
 | What does status describe? | Individual resource conditions and Work-wide conditions summarizing the delivered manifests | Acceptance, reference resolution, and whether the entire managed installation is applied, current, and usable, including any hosted components or external services |
 | What does the lifecycle cover? | Updates to the manifests and cleanup of the delivered resources | Changes to the request's AddOnClass, parameters, and current target, and cleanup of the managed installation |
 
 An AddOn Manager can use Work to deliver resources and separately manage a
-hosted controller or an external service. It remains responsible for AddOn
-status and cleanup across those locations. This lets users request hosted or
-serverless functionality without describing the components or choosing where
-they run. The [functionality implementation
-patterns](#functionality-implementation-patterns) and the
-[hosted Karpenter
-example](#hosted-karpenter-and-dependent-resources) illustrate
-these choices.
+hosted controller or an external service. The AddOn Manager reports status and
+handles cleanup for the entire installation. A platform user can request this
+functionality without composing its components or choosing where they run, as
+in the [hosted Karpenter example](#hosted-karpenter-and-dependent-resources).
 
 ### Examples of AddOn Functionality
 
@@ -257,41 +264,124 @@ illustrative AddOnClasses.
 | `vllm` | [vLLM](https://docs.vllm.ai/en/v0.20.2/serving/openai_compatible_server/) | LLM inference through an OpenAI-compatible HTTP endpoint. |
 
 With wider adoption, an add-on catalog could list these offerings so users and
-dashboards can request them through the same API. Catalog discovery and
-distribution remain future work.
+dashboards can request them through the same API.
+
+### Add-on Types
+
+Add-ons differ in what they contain and where their components run:
+
+| Type | Contents and location | Example | Example `Available` check |
+| --- | --- | --- | --- |
+| API extension | CRDs without a controller, on the target | [Gateway API](https://gateway-api.sigs.k8s.io/) CRDs | The CRDs are established |
+| Configuration | Kubernetes objects without a controller, on the target | Namespaces, RBAC, and NetworkPolicies for a team | The objects exist as requested |
+| In-cluster software | Controllers or workloads, with their CRDs and configuration, on the target | cert-manager, OpenTelemetry Collector | The workloads are ready and the functionality works |
+| Hosted software | A controller on a hub or another cluster, with CRDs, configuration, or agents on the target | [Hosted Karpenter](#hosted-karpenter-and-dependent-resources) | The hosted controller can provision Nodes for the target |
+| External service | A service outside Kubernetes with access to the target | [Amazon Managed Service for Prometheus collector](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector.html) | The collector is active and scrapes the target's metrics |
+
+Their Kubernetes objects can come from a Helm chart, a Kustomize package, or
+plain manifests. The selected AddOn Manager provides each type itself, through
+a controller such as Flux, or through a managed service such as Amazon EKS
+add-ons, as described in [Functionality Implementation
+Patterns](#functionality-implementation-patterns).
 
 ### Goals
 
-1. Let users and applications request functionality for one ClusterProfile
-   through a common API across AddOn Manager implementations.
-2. Let a platform administrator offer add-on functionality through AddOnClasses
-   that select an AddOn Manager and optional shared parameters, while users can
-   supply parameters on each AddOn.
-3. Let clients distinguish acceptance, reference resolution, application,
-   whether an installation is current, and availability through standard
-   conditions.
-4. Define lifecycle behavior for changes to the AddOnClass, parameters, current
-   target ClusterProfile, and deletion policy, including installations with
-   components in several locations.
+1. Let platform administrators and platform users tell request and
+   configuration problems, installation progress, and unusable installations
+   apart through the same conditions across AddOn Manager implementations.
+2. Let platform administrators offer functionality through AddOnClasses that
+   select an AddOn Manager and optional shared parameters, and let platform
+   users request it for one ClusterProfile with optional per-AddOn parameters.
+3. Let platform administrators and platform users rely on AddOn status when
+   the AddOnClass, parameters, or current target ClusterProfile changes, and
+   on cleanup when an AddOn is deleted, including installations with components
+   in several locations.
 
 ### Non-Goals
 
 - Standardizing Helm, OCI, Git, Kustomize, OLM, or another installation format.
 - Defining a version field or a parameter schema shared by different AddOn Managers.
+- Standardizing functionality-specific health checks or detailed diagnostics.
+- Discovering and observing existing installations independently of an AddOn
+  request and its selected AddOn Manager.
+- Defining catalog discovery or distribution.
 - Selecting several clusters or generating AddOns from placement output. A
-  user or another controller may create individual AddOns.
+  platform user or another controller may create individual AddOns.
+- Defining status aggregation or coordination between hubs in a hub-of-hubs
+  topology, where one hub manages other hubs.
 - Allowing an AddOn to reference a ClusterProfile or per-AddOn parameters in
   another namespace.
 - Defining cluster credentials or the placement of AddOn Manager components.
 
 ## Proposal
 
+### User Stories
+
+#### Story 1: Self-service add-ons
+
+In this scenario, a platform administrator offers add-ons for the platform's
+clusters as AddOnClasses, and platform users request the ones their clusters
+need with AddOns. Platform users can make requests themselves with `kubectl`,
+through a developer portal, with a GitOps tool such as Argo CD, or from the
+controller that creates their clusters, and see when each add-on becomes
+available.
+
+Examples include:
+
+- As a platform user, I want Pod networking and certificate management on my
+  cluster before I deploy workloads to it.
+- As a platform administrator, I want to change the monitoring backend for
+  every cluster in one place.
+- As a platform user, I want [Karpenter to provision
+  Nodes](#hosted-karpenter-and-dependent-resources) for a new cluster that has
+  none yet.
+- As a platform user, I want to serve an LLM through an OpenAI-compatible
+  endpoint from my GPU cluster.
+- As a platform user, I want to request add-ons the same way for my EKS
+  clusters and my on-premises clusters.
+- As a platform user, I want to request add-ons for a single cluster [from that
+  cluster's own API](#local-cluster).
+
+#### Story 2: Status and troubleshooting
+
+In this scenario, platform administrators and platform users check the state of
+the add-ons requested for their clusters and find the cause when one does not
+work.
+
+Examples include:
+
+- As a platform administrator, I want to find the clusters where certificate
+  management is not available yet.
+- As a platform administrator, I want to tell whether an [OpenTelemetry
+  Collector update](#one-hub-and-multiple-spokes) on a cluster is still in
+  progress or has left the Collector unusable.
+- As a platform administrator, I want to see when a faulty shared configuration
+  causes add-on requests to fail on many clusters.
+- As a platform administrator, I want to find the clusters where removing an
+  add-on is stuck, for example because a cluster is unreachable.
+- As a platform user, I want to know when someone has changed an add-on on my
+  cluster so that it no longer matches my request.
+- As a platform user, I want details from the installation method, such as a
+  failed Helm upgrade, when an add-on does not work.
+
+#### Story 3: Transparent to clients
+
+Clients can work with any add-on system that has an AddOn Manager, because
+every AddOn Manager uses the same API.
+
+This means that a developer portal or dashboard can request add-ons and display
+their status on several multicluster platforms through one integration. A
+platform administrator can also offer an add-on through another add-on system,
+such as EKS add-ons for EKS clusters, without changing the portals and
+dashboards that request and display it.
+
 ### API Overview
 
 The API uses Kubernetes resources, but client applications and AddOn Managers
-can run inside or outside Kubernetes. For example, a hosted dashboard can create
-AddOns and display their conditions, while an external AddOn Manager can
-translate requests to the [Amazon Elastic Kubernetes Service add-on
+can run inside or outside Kubernetes. For example, a hosted dashboard can
+display AddOn conditions for platform administrators and submit requests for
+platform users, while an external AddOn Manager can translate requests to the
+[Amazon Elastic Kubernetes Service add-on
 API](#integration-with-an-existing-controller-or-service).
 
 ![An AddOn selects an AddOnClass and a target ClusterProfile; the AddOnClass
@@ -303,11 +393,11 @@ status](./addon-api-overview.svg)
 The API group is `multicluster.x-k8s.io`, and the proposed version is
 `v1alpha1`. Both AddOnClass and AddOn are namespaced resources.
 
-| Resource | Who writes the spec | Purpose |
-| --- | --- | --- |
-| `AddOnClass` | A platform administrator | Selects an AddOn Manager and optionally points to shared parameters |
-| `AddOn` | A user or client application permitted to create AddOns | Requests and observes functionality for one ClusterProfile |
-| `ClusterProfile` | A Cluster Manager | Identifies the target cluster and its current access configuration |
+| Resource | Who writes the spec | Who writes status | Purpose |
+| --- | --- | --- | --- |
+| `AddOnClass` | A platform administrator | The selected AddOn Manager | Selects an AddOn Manager and optionally points to shared parameters; reports whether the AddOnClass is accepted |
+| `AddOn` | A platform user or client permitted to write AddOns | The AddOn Manager | Requests functionality for one ClusterProfile and reports the managed installation's state |
+| `ClusterProfile` | A Cluster Manager | A Cluster Manager | Identifies the target cluster and its current access configuration |
 
 An inventory is a set of ClusterProfiles in one namespace. An AddOn belongs to
 the same namespace as its target ClusterProfile. It can select an AddOnClass
@@ -332,10 +422,6 @@ name when it reconciles the AddOn.
 ## Design Details
 
 ### API Types
-
-The Go types show the fields and JSON names. [Validation and
-References](#validation-and-references) specifies the schema constraints, and
-the [Status Contract](#status-contract) specifies initial conditions.
 
 `AddOnClass` selects the AddOn Manager and optionally points to a shared
 parameters object. An AddOn Manager defines the parameter kinds it accepts and
@@ -551,11 +637,16 @@ AddOn Manager are domain-prefixed.
 | `UpToDate` | The active installation for the current target matches the request and no older installation remains active | It is outdated, an older installation remains active, drift was found, or deletion is pending | Whether the installation is current cannot be determined |
 | `Available` | An active installation for the current target is usable | The active installation is known to be unusable | Usability cannot be determined |
 
-A condition's reason explains the particular cause. All five conditions are
-current for the AddOn spec when they are present and their `observedGeneration`
-equals `metadata.generation`. When all five are current and `True`, they report
-that the installation requested by the AddOn is applied, current, and usable as
-last observed by the AddOn Manager.
+A condition's reason explains the particular cause, and its message can give
+details from the installation mechanism. The AddOn Manager reports
+`Applied=False` with reason `ApplyFailed` when its latest attempt to apply the
+request failed, and `UpToDate=False` with reason `DriftDetected` when the
+installation has drifted from the request.
+
+All five conditions are current for the AddOn spec when they are present and
+their `observedGeneration` equals `metadata.generation`. When all five are
+current and `True`, they report that the installation requested by the AddOn is
+applied, current, and usable as last observed by the AddOn Manager.
 
 Changes to an AddOnClass or to either referenced parameters object's contents
 do not advance the AddOn's generation. A matching `observedGeneration`
@@ -685,9 +776,6 @@ Here, a hosted controller runs outside the target cluster, including on a hub.
 | Runtime outside Kubernetes | Accesses the target API remotely from an external process or service |
 | Target cluster | Accesses that cluster's API locally |
 
-For a local AddOn, the cluster hosting the API resources and the target cluster
-are the same location.
-
 Resource delivery and configuration are additional implementation choices. An
 AddOn Manager can use Work to deliver manifests to the target or integrate with
 an Open Cluster Management
@@ -700,7 +788,7 @@ systems](#existing-add-on-systems) provide other integration options.
 The AddOn Manager can itself reconcile the resources that provide the requested
 functionality. In this example, it runs on a hub cluster and acts as a controller
 shared across two AddOns: `addon-a` targets the spoke `cluster-a`, and `addon-b`
-targets the spoke `cluster-b`. Both requests are served by the same controller.
+targets the spoke `cluster-b`.
 
 An implementation could use
 [multicluster-runtime](https://github.com/kubernetes-sigs/multicluster-runtime)
@@ -775,10 +863,10 @@ metrics collection for the spoke represented by ClusterProfile
 example](#opentelemetry-collector-for-a-spoke-cluster) defines these resources.
 
 A second AddOn can select the same AddOnClass for `fleet-prod/cluster-b` with
-different parameters. To update only `cluster-a`, the user creates a parameters
-object with the new image tag and changes the first AddOn's `parametersRef`.
-Its `Applied`, `UpToDate`, and `Available` conditions distinguish an update in
-progress from a current, usable installation.
+different parameters. To update only `cluster-a`, the platform user creates a
+parameters object with the new image tag and changes the first AddOn's
+`parametersRef`. Its `Applied`, `UpToDate`, and `Available` conditions
+distinguish an update in progress from a current, usable installation.
 
 The hub holds the shared AddOnClass and parameters in `platform-system`, and
 the AddOns, per-AddOn parameters, and ClusterProfiles in `fleet-prod`. The
@@ -1074,9 +1162,10 @@ AddOn Manager conformance tests cover:
    object's contents reconcile the affected AddOns. Missing or invalid
    references report `ResolvedRefs=False`; invalid AddOnClass parameters report
    AddOnClass `Accepted=False` even when its generation is unchanged.
-3. Partial application, an old installation still serving, health failure,
-   drift, target access loss, and AddOn Manager restart produce the distinct
-   `Applied`, `UpToDate`, and `Available` outcomes in the status contract.
+3. Partial or failed application, an old installation still serving, health
+   failure, drift, target access loss, and AddOn Manager restart produce the
+   distinct `Applied`, `UpToDate`, and `Available` outcomes and reasons in the
+   status contract.
 4. When a ClusterProfile's access configuration points to another cluster,
    including after recreation under the same name, the AddOn Manager verifies
    the current target; an installation for a former target does not establish
@@ -1326,6 +1415,12 @@ Extending Work with AddOnClass selection, parameters defined by the AddOn
 Manager, and the AddOn installation lifecycle is an alternative. A separate
 AddOn API lets managers backed by different installation mechanisms offer the
 same request, lifecycle, and status interface.
+
+Reporting add-ons as ClusterProfile
+[properties](../4322-cluster-inventory/README.md#properties) or About API
+[`ClusterProperty`](../2149-clusterid/README.md) resources was ruled out
+because they describe the cluster and cannot hold a request, its AddOn Manager,
+or the progress of its update and cleanup.
 
 A cluster-scoped AddOnClass would let every inventory select the same
 AddOnClass without a namespace in `classRef`, but creating or changing it would
