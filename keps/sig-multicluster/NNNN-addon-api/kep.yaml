@@ -7,7 +7,7 @@ owning-sig: sig-multicluster
 status: provisional
 creation-date: 2026-09-24
 reviewers:
-  - "@johnbelamaric"
+  - "@johnkeates"
   - "@MrFreezeex"
 approvers:
   - "@jeremyot"
