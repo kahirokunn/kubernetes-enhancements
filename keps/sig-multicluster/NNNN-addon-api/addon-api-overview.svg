@@ -58,9 +58,10 @@
   <text class="example" x="550" y="370">fleet-prod/otel-collector-cluster-a</text>
   <text class="detail" x="550" y="406">spec: requested state</text>
   <text class="detail" x="550" y="428">Optional per-AddOn parameters</text>
-  <path d="M 425 443 H 675" fill="none" stroke="#595959"/>
-  <text class="detail" x="550" y="465">status: observed result</text>
-  <text class="condition" x="550" y="485">Accepted, ResolvedRefs, Applied,</text>
+  <path d="M 425 437 H 675" fill="none" stroke="#595959"/>
+  <text class="detail" x="550" y="456">status: observed result</text>
+  <text class="condition" x="550" y="473">Accepted, ClusterProfileResolved,</text>
+  <text class="condition" x="550" y="488">ParametersResolved, Applied,</text>
   <text class="condition" x="550" y="503">UpToDate, Available</text>
   <rect class="resource" x="780" y="310" width="280" height="205" rx="6"/>
   <text class="name" x="920" y="344">ClusterProfile</text>

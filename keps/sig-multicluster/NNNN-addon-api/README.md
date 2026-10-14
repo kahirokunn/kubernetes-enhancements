@@ -20,14 +20,16 @@
   - [Users and Resources](#users-and-resources)
   - [Risks and Mitigations](#risks-and-mitigations)
 - [Design Details](#design-details)
+  - [Protocol Overview](#protocol-overview)
   - [API Types](#api-types)
-  - [Validation and References](#validation-and-references)
+  - [Parameters References](#parameters-references)
   - [AddOn Manager Selection and AddOnClass Lifecycle](#addon-manager-selection-and-addonclass-lifecycle)
   - [Target Changes](#target-changes)
   - [Status Contract](#status-contract)
   - [Reconciliation](#reconciliation)
   - [Deletion](#deletion)
   - [Authorization and Scale](#authorization-and-scale)
+  - [AddOn Manager Library](#addon-manager-library)
   - [Functionality Implementation Patterns](#functionality-implementation-patterns)
     - [Reconciliation by the AddOn Manager](#reconciliation-by-the-addon-manager)
     - [Reconciliation by a dedicated controller](#reconciliation-by-a-dedicated-controller)
@@ -120,13 +122,12 @@ status model.
 An `AddOn` records a request for one target cluster, identified by its
 [`ClusterProfile`](../4322-cluster-inventory/README.md), and the AddOn Manager's
 observations of that request. A platform administrator offers functionality
-through an `AddOnClass`, selecting the responsible AddOn Manager and optional
-shared parameters. A platform user selects that AddOnClass and optional
-per-AddOn parameters. Both read AddOn status to identify requests that need
-attention.
+through an `AddOnClass`, selecting the responsible AddOn Manager. A platform
+user selects that AddOnClass.
 
 Each AddOn Manager defines its parameters, installation mechanisms, access
-requirements, and health checks. It can provide hosted or serverless
+requirements, and health checks, and follows a common protocol for receiving
+requests and reporting their status. It can provide hosted or serverless
 functionality using components on the target, on another cluster, or in an
 external service. The API also supports a [local cluster](#local-cluster).
 
@@ -278,28 +279,28 @@ Add-ons differ in what they contain and where their components run:
 | Hosted software | A controller on a hub or another cluster, with CRDs, configuration, or agents on the target | [Hosted Karpenter](#hosted-karpenter-and-dependent-resources) | The hosted controller can provision Nodes for the target |
 | External service | A service outside Kubernetes with access to the target | [Amazon Managed Service for Prometheus collector](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector.html) | The collector is active and scrapes the target's metrics |
 
-Their Kubernetes objects can come from a Helm chart, a Kustomize package, or
-plain manifests. The selected AddOn Manager provides each type itself, through
-a controller such as Flux, or through a managed service such as Amazon EKS
-add-ons, as described in [Functionality Implementation
-Patterns](#functionality-implementation-patterns).
+Their Kubernetes objects can be defined in a Helm chart, a Kustomize package,
+or plain manifests. See [Functionality Implementation
+Patterns](#functionality-implementation-patterns) for how an AddOn Manager can
+provide an add-on of any of these types.
 
 ### Goals
 
 1. Let platform administrators and platform users tell request and
    configuration problems, installation progress, and unusable installations
    apart through the same conditions across AddOn Manager implementations.
-2. Let platform administrators offer functionality through AddOnClasses that
-   select an AddOn Manager and optional shared parameters, and let platform
-   users request it for one ClusterProfile with optional per-AddOn parameters.
-3. Let platform administrators and platform users rely on AddOn status when
-   the AddOnClass, parameters, or current target ClusterProfile changes, and
-   on cleanup when an AddOn is deleted, including installations with components
-   in several locations.
+2. Let platform administrators offer functionality that platform users can
+   request for a cluster.
+3. Let platform users rely on AddOn status when a request changes, and on
+   cleanup when it is deleted, including for installations with components in
+   several locations.
+4. Let AddOn Managers follow the same protocol with any installation mechanism,
+   and provide a library for its common parts.
 
 ### Non-Goals
 
 - Standardizing Helm, OCI, Git, Kustomize, OLM, or another installation format.
+- Providing a default installation system, such as a built-in Helm integration.
 - Defining a version field or a parameter schema shared by different AddOn Managers.
 - Standardizing functionality-specific health checks or detailed diagnostics.
 - Discovering and observing existing installations independently of an AddOn
@@ -309,11 +310,16 @@ Patterns](#functionality-implementation-patterns).
   platform user or another controller may create individual AddOns.
 - Defining status aggregation or coordination between hubs in a hub-of-hubs
   topology, where one hub manages other hubs.
-- Allowing an AddOn to reference a ClusterProfile or per-AddOn parameters in
-  another namespace.
+- Allowing an AddOn to reference a ClusterProfile in another namespace.
 - Defining cluster credentials or the placement of AddOn Manager components.
 
 ## Proposal
+
+The proposal is that an AddOn Manager handles all work that is specific to the
+functionality it provides, such as installing, updating, and removing that
+functionality and checking its health. It can perform that work itself or
+delegate it to another system, as long as it follows the
+[protocol](#protocol-overview) defined in this KEP.
 
 ### User Stories
 
@@ -391,11 +397,11 @@ status](./addon-api-overview.svg)
 ### Users and Resources
 
 The API group is `multicluster.x-k8s.io`, and the proposed version is
-`v1alpha1`. Both AddOnClass and AddOn are namespaced resources.
+`v1alpha1`.
 
 | Resource | Who writes the spec | Who writes status | Purpose |
 | --- | --- | --- | --- |
-| `AddOnClass` | A platform administrator | The selected AddOn Manager | Selects an AddOn Manager and optionally points to shared parameters; reports whether the AddOnClass is accepted |
+| `AddOnClass` | A platform administrator | The selected AddOn Manager | Selects an AddOn Manager and references shared parameters; reports whether the AddOnClass is accepted |
 | `AddOn` | A platform user or client permitted to write AddOns | The AddOn Manager | Requests functionality for one ClusterProfile and reports the managed installation's state |
 | `ClusterProfile` | A Cluster Manager | A Cluster Manager | Identifies the target cluster and its current access configuration |
 
@@ -413,7 +419,7 @@ name when it reconciles the AddOn.
 
 | Risk | API behavior and operational boundary |
 | --- | --- |
-| An AddOn writer selects an AddOnClass with more authority than intended | By default, AddOn creation permits selection of any AddOnClass, including one in another namespace. Platform administrators can restrict selection through admission; see [Authorization and Scale](#authorization-and-scale). |
+| An AddOn writer selects an AddOnClass or parameters object with more authority than intended | By default, AddOn creation permits selection of any AddOnClass or parameters object, including one in another namespace. Platform administrators can restrict selection through admission; see [Authorization and Scale](#authorization-and-scale). |
 | A shared AddOnClass or its parameters change | The AddOn Manager reconciles all affected AddOns. Unusable parameters stop normal installation changes; existing installations remain in place unless an AddOn is being deleted and safe cleanup is possible. |
 | An AddOnClass is deleted while AddOns use it | The DELETE webhook blocks deletion while any AddOn references the AddOnClass. If the AddOnClass nevertheless becomes unavailable, normal installation changes stop; the AddOn Manager that created an installation handles its cleanup through its finalizer. See [AddOn Manager Selection and AddOnClass Lifecycle](#addon-manager-selection-and-addonclass-lifecycle). |
 | The ClusterProfile name comes to represent another cluster | The AddOn Manager verifies the installation for the current target before affirming its conditions. |
@@ -421,11 +427,43 @@ name when it reconciles the AddOn.
 
 ## Design Details
 
+### Protocol Overview
+
+```mermaid
+sequenceDiagram
+    participant C as Platform user or client
+    participant API as API server
+    participant M as AddOn Manager selected<br/>by the AddOn's AddOnClass
+
+    C->>API: Create AddOn
+    loop When the AddOn or anything it references changes
+        API-->>M: Watch event
+        alt A reference is unusable
+            M->>API: Set the condition for that reference to False
+            Note over M: Leave any existing installation unchanged
+        else All references are usable
+            M->>API: Add its finalizer
+            Note over M: Install or update the functionality<br/>to match the request
+            M->>API: Report progress in Applied and UpToDate,<br/>and health in Available
+        end
+        API-->>C: AddOn status
+    end
+    C->>API: Delete AddOn
+    API-->>M: Watch event
+    alt deletionPolicy is Delete
+        M->>API: Report cleanup progress in UpToDate
+        Note over M: Remove the installation
+    else deletionPolicy is Orphan
+        Note over M: Leave the installation in place
+    end
+    M->>API: Remove its finalizer
+    API-->>C: AddOn removed
+```
+
 ### API Types
 
-`AddOnClass` selects the AddOn Manager and optionally points to a shared
-parameters object. An AddOn Manager defines the parameter kinds it accepts and
-how AddOnClass and AddOn parameters combine.
+`AddOnClass` selects the AddOn Manager. An AddOn Manager defines the parameter
+kinds it accepts and how AddOnClass and AddOn parameters combine.
 
 ```go
 // +kubebuilder:resource:scope=Namespaced,categories=multicluster
@@ -433,38 +471,37 @@ how AddOnClass and AddOn parameters combine.
 type AddOnClass struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              AddOnClassSpec   `json:"spec"`
-	Status            AddOnClassStatus `json:"status,omitempty"`
+	// +required
+	Spec AddOnClassSpec `json:"spec"`
+	// +kubebuilder:default={conditions: {{type: "Accepted", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}}}
+	Status AddOnClassStatus `json:"status,omitempty"`
 }
 
 type AddOnClassSpec struct {
 	// +required
-	Manager       AddOnManager                   `json:"manager"`
-	ParametersRef *AddOnClassParametersReference `json:"parametersRef,omitempty"`
+	// +kubebuilder:validation:XValidation:message="Value is immutable",rule="self == oldSelf"
+	Manager       AddOnManager              `json:"manager"`
+	ParametersRef *AddOnParametersReference `json:"parametersRef,omitempty"`
 }
 
 type AddOnManager struct {
 	// +required
+	// +kubebuilder:validation:MinLength=3
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)+$`
 	Name string `json:"name"`
-}
-
-type AddOnClassParametersReference struct {
-	Group     string `json:"group"` // Empty for a core API kind.
-	Kind      string `json:"kind"`
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
 }
 
 type AddOnClassStatus struct {
 	// +listType=map
 	// +listMapKey=type
+	// +kubebuilder:default={{type: "Accepted", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 ```
 
-`AddOn` names one AddOnClass and one ClusterProfile. An AddOnClass reference
-without a namespace resolves to the AddOn's namespace. `clusterProfileRef` is
-immutable so that changing the named target requires a new AddOn.
+When `classRef` has no namespace, it resolves to the AddOn's namespace.
+Changing the target ClusterProfile requires a new AddOn.
 
 ```go
 // +kubebuilder:resource:scope=Namespaced,categories=multicluster
@@ -472,32 +509,61 @@ immutable so that changing the named target requires a new AddOn.
 type AddOn struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              AddOnSpec   `json:"spec"`
-	Status            AddOnStatus `json:"status,omitempty"`
+	// +required
+	Spec AddOnSpec `json:"spec"`
+	// +kubebuilder:default={conditions: {{type: "Accepted", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "ClusterProfileResolved", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "ParametersResolved", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "Applied", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "UpToDate", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "Available", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}}}
+	Status AddOnStatus `json:"status,omitempty"`
 }
 
 type AddOnSpec struct {
-	ClassRef          AddOnClassReference          `json:"classRef"`
+	// +required
+	ClassRef AddOnClassReference `json:"classRef"`
+	// +required
+	// +kubebuilder:validation:XValidation:message="Value is immutable",rule="self == oldSelf"
 	ClusterProfileRef AddOnClusterProfileReference `json:"clusterProfileRef"`
 	ParametersRef     *AddOnParametersReference    `json:"parametersRef,omitempty"`
-	DeletionPolicy    AddOnDeletionPolicy          `json:"deletionPolicy,omitempty"`
+	// +kubebuilder:default=Delete
+	DeletionPolicy AddOnDeletionPolicy `json:"deletionPolicy,omitempty"`
 }
 
 type AddOnClassReference struct {
-	Name      string `json:"name"`
+	// +required
+	Name ObjectName `json:"name"`
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
 	Namespace string `json:"namespace,omitempty"`
 }
 
 type AddOnClusterProfileReference struct {
-	Name string `json:"name"`
+	// +required
+	Name ObjectName `json:"name"`
 }
 
 type AddOnParametersReference struct {
-	Group string `json:"group"` // Empty for a core API kind.
-	Kind  string `json:"kind"`
-	Name  string `json:"name"`
+	// +required
+	// +kubebuilder:validation:MaxLength=253
+	// +kubebuilder:validation:Pattern=`^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`
+	Group string `json:"group"` // Empty for the core API group.
+	// +required
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$`
+	Kind string `json:"kind"`
+	// +required
+	Name ObjectName `json:"name"`
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:MaxLength=63
+	// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
+	Namespace string `json:"namespace,omitempty"`
 }
 
+// +kubebuilder:validation:MinLength=1
+// +kubebuilder:validation:MaxLength=253
+// +kubebuilder:validation:Pattern=`^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$`
+type ObjectName string
+
+// +kubebuilder:validation:Enum=Delete;Orphan
 type AddOnDeletionPolicy string
 
 const (
@@ -508,38 +574,17 @@ const (
 type AddOnStatus struct {
 	// +listType=map
 	// +listMapKey=type
+	// +kubebuilder:default={{type: "Accepted", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "ClusterProfileResolved", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "ParametersResolved", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "Applied", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "UpToDate", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}, {type: "Available", status: "Unknown", reason: "Pending", message: "Waiting for AddOn Manager", lastTransitionTime: "1970-01-01T00:00:00Z"}}
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 ```
 
-### Validation and References
+### Parameters References
 
-The CRDs apply the following validation and defaulting rules without reading
-another object:
-
-| Field | Schema rule |
-| --- | --- |
-| `AddOnClass.spec.manager.name` | Lowercase DNS name with at least one dot, 3–63 characters, so it can also be used as a label value |
-| Either `parametersRef.group` | Empty for the core API group, otherwise a DNS subdomain of at most 253 characters |
-| Either `parametersRef.kind` | 1–63 ASCII letters, digits, or hyphens; starts with a letter and ends with a letter or digit |
-| Either `parametersRef.name`, `AddOn.spec.classRef.name`, and `AddOn.spec.clusterProfileRef.name` | DNS subdomain of 1–253 characters |
-| `AddOnClass.spec.parametersRef.namespace` and `AddOn.spec.classRef.namespace`, when present | DNS label of 1–63 characters |
-| `AddOnClass.spec.manager` and `AddOn.spec.clusterProfileRef` | Immutable |
-| `AddOn.spec.deletionPolicy` | `Delete` or `Orphan`; defaults to `Delete` |
-
-Both `parametersRef` fields are optional; an implementation that needs no
-parameters can accept AddOnClasses and AddOns that omit them. When present,
-both parameter references require `group`, `kind`, and `name`. An AddOnClass
-parameters reference includes `namespace` for a namespaced kind and omits it
-for a cluster-scoped kind. The AddOn Manager checks that this agrees with the
-kind's scope. The referenced object may be in a namespace other than the
-AddOnClass's.
-
-An AddOn parameters reference has no namespace field: it always names an object
-in the AddOn's namespace. An AddOn can therefore use a shared AddOnClass
-without granting the AddOnClass's author control over its per-AddOn parameters.
-A missing, unsupported, or invalid AddOnClass parameters object makes the
-AddOnClass `Accepted=False` with reason `InvalidParameters`.
+A parameters reference names an object of a namespaced kind. When `namespace`
+is omitted, it resolves to the namespace of the AddOnClass or AddOn that holds
+the reference. A missing, unsupported, or invalid AddOnClass parameters object
+makes the AddOnClass `Accepted=False`.
 
 ### AddOn Manager Selection and AddOnClass Lifecycle
 
@@ -556,8 +601,7 @@ the AddOn Manager re-evaluates those contents when it observes a change.
 
 An AddOn's `spec.classRef` identifies its current AddOnClass. When the
 AddOnClass exists, its `spec.manager.name` selects the AddOn Manager for normal
-reconciliation. If the AddOnClass is missing, no AddOn Manager is selected
-through that reference.
+reconciliation. If the AddOnClass is missing, no AddOn Manager is selected.
 
 An AddOn writer may change `classRef.name` or `classRef.namespace` to another
 AddOnClass served by the same AddOn Manager. The new AddOnClass becomes the
@@ -586,15 +630,14 @@ The selected AddOn Manager SHOULD keep a finalizer on an AddOnClass while any
 AddOn references it, including AddOns in other namespaces. It removes that
 finalizer when no AddOn references the AddOnClass. An AddOn Manager that
 observes a terminating AddOnClass makes no normal installation changes through
-it and reports the AddOnClass `Accepted=False` with reason `Deleting`.
+it and reports the AddOnClass `Accepted=False`.
 
 An AddOnClass DELETE admission webhook MUST reject deletion while any AddOn in
 any namespace references that AddOnClass's name and namespace through its
-resolved `spec.classRef` (an omitted namespace resolves to the AddOn's
-namespace). An AddOn being deleted or not yet accepted still counts until its
-object is removed. Once an AddOn changes its AddOnClass reference, the old
-AddOnClass is no longer protected by that AddOn. The webhook uses
-`failurePolicy: Fail` and must be able to list AddOns across namespaces; a
+resolved `spec.classRef`. An AddOn being deleted or not yet accepted still
+counts until its object is removed. Once an AddOn changes its AddOnClass
+reference, the old AddOnClass is no longer protected by that AddOn. The webhook
+uses `failurePolicy: Fail` and must be able to list AddOns across namespaces; a
 listing failure rejects deletion.
 
 Admission and reconciliation can race: an AddOn may be created after the DELETE
@@ -617,34 +660,37 @@ on a former target.
 
 ### Status Contract
 
-Both condition lists use list-map semantics keyed by `type`. The CRD defaults
-the AddOnClass `Accepted` condition and all five standard AddOn conditions to
-`Unknown` with reason `Pending`, the message `Waiting for AddOn Manager`, and
-the epoch timestamp `1970-01-01T00:00:00Z` in `lastTransitionTime`. These
-defaults have no `observedGeneration`.
-
-The selected AddOn Manager MUST publish exactly one of each of the five
-standard AddOn conditions after it begins reconciling an AddOn, including when
-a reference other than the AddOnClass is unresolved. Conditions carry the
-AddOn's generation in `observedGeneration`. Condition types specific to an
-AddOn Manager are domain-prefixed.
+After it begins reconciling an AddOn, the selected AddOn Manager MUST publish
+the standard AddOn conditions, including when a reference other than the
+AddOnClass is unresolved. Conditions carry the AddOn's generation in
+`observedGeneration`. Condition types specific to an AddOn Manager are
+domain-prefixed.
 
 | Condition | `True` | `False` | `Unknown` |
 | --- | --- | --- | --- |
-| `Accepted` | The requested AddOnClass can manage this AddOn | The AddOnClass rejects it, is terminating, or was observed missing | Acceptance cannot yet be determined |
-| `ResolvedRefs` | The AddOnClass, its parameters, the target ClusterProfile, AddOn parameters, and required references specific to the AddOn Manager are usable | A required reference is missing, terminating, or invalid | Reference state cannot be determined |
+| `Accepted` | The requested AddOnClass can manage this AddOn | The AddOnClass rejects it, is terminating, was observed missing, or its parameters are unusable | Acceptance cannot yet be determined |
+| `ClusterProfileResolved` | The target ClusterProfile is usable | The ClusterProfile is missing, terminating, or invalid | The ClusterProfile's state cannot be determined |
+| `ParametersResolved` | The AddOn's parameters and the references they require are usable, or the AddOn has no `parametersRef` and the AddOn Manager needs none | The `parametersRef` object or a reference it requires is missing, terminating, or invalid, or the AddOn Manager needs a `parametersRef` and the AddOn has none | The parameters' state cannot be determined |
 | `Applied` | The entire requested installation has been confirmed applied for the current target | Application is known to be incomplete or failed | Whether the requested installation has been applied cannot be determined |
 | `UpToDate` | The active installation for the current target matches the request and no older installation remains active | It is outdated, an older installation remains active, drift was found, or deletion is pending | Whether the installation is current cannot be determined |
 | `Available` | An active installation for the current target is usable | The active installation is known to be unusable | Usability cannot be determined |
 
-A condition's reason explains the particular cause, and its message can give
-details from the installation mechanism. The AddOn Manager reports
-`Applied=False` with reason `ApplyFailed` when its latest attempt to apply the
-request failed, and `UpToDate=False` with reason `DriftDetected` when the
-installation has drifted from the request.
+A condition's message can carry details from the installation mechanism. The
+AddOn Manager reports these reasons in addition to the default `Pending`:
 
-All five conditions are current for the AddOn spec when they are present and
-their `observedGeneration` equals `metadata.generation`. When all five are
+| Resource | Condition | Status | Reason | Reported when |
+| --- | --- | --- | --- | --- |
+| AddOnClass | `Accepted` | `False` | `InvalidParameters` | The AddOnClass's parameters object is missing, unsupported, or invalid |
+| AddOnClass | `Accepted` | `False` | `Deleting` | The AddOnClass is terminating |
+| AddOn | `ParametersResolved` | `False` | `InvalidParameters` | The AddOn's parameters object is missing, unsupported, or invalid |
+| AddOn | `Applied` | `False` | `ApplyFailed` | The latest attempt to apply the request failed |
+| AddOn | `UpToDate` | `False` | `DriftDetected` | The installation has drifted from the request |
+| AddOn | `UpToDate` | `False` | `Deleting` | Cleanup is in progress and its scope is known |
+| AddOn | `UpToDate` | `False` | `CleanupBlocked` | Removal cannot proceed, including when required access is lost |
+| AddOn | `UpToDate` | `Unknown` | `CleanupBlocked` | Unavailable AddOnClass inputs leave the cleanup scope unknown |
+
+The standard conditions are current for the AddOn spec when they are present
+and their `observedGeneration` equals `metadata.generation`. When all are
 current and `True`, they report that the installation requested by the AddOn is
 applied, current, and usable as last observed by the AddOn Manager.
 
@@ -656,20 +702,22 @@ API has no input revision or heartbeat field. For a generation-based check of
 an individual update, a user can create a new immutable parameters object and
 change that AddOn's `parametersRef`.
 
-If the AddOnClass exists but it or its parameters are unusable, the selected
-AddOn Manager reports `Accepted=False` and `ResolvedRefs=False` and makes no
-normal installation changes. It reports `Applied=Unknown` and
-`UpToDate=Unknown` when it cannot determine the current request from the
-AddOnClass and its parameters, and reports `Available` from current evidence
-about the installation, or `Unknown` if there is none. If the AddOnClass
-disappears, no AddOn Manager is selected through `spec.classRef`. An AddOn
-Manager still observing the AddOn may report the missing AddOnClass, but
-conditions may also remain at their last reported values, even when their
-`observedGeneration` matches the AddOn's generation. Deletion follows the
-separate [cleanup rules](#deletion). When an AddOnClass becomes usable again,
-including after recreation under the same namespace and name, its selected
-AddOn Manager evaluates the current parameters and verifies the installation
-before affirming `Applied` and `UpToDate`.
+If the AddOnClass exists but it, the AddOnClass's parameters, the target
+ClusterProfile, or the AddOn's parameters are unusable, the selected AddOn
+Manager reports the corresponding condition in the table above as `False` and
+makes no normal installation changes. It reports `Applied=Unknown` and
+`UpToDate=Unknown` when it cannot determine the current request, and reports
+`Available` from current evidence about the installation, or `Unknown` if there
+is none.
+
+While the AddOnClass is missing, the AddOn Manager that was reconciling the
+AddOn may set `Accepted=False` to report the missing AddOnClass. Otherwise the
+conditions keep their last reported values, even when `observedGeneration`
+matches the AddOn's generation. Deletion follows the separate [cleanup
+rules](#deletion). When an AddOnClass becomes usable again, including after
+recreation under the same namespace and name, its selected AddOn Manager
+evaluates the current parameters and verifies the installation before
+affirming `Applied` and `UpToDate`.
 
 ### Reconciliation
 
@@ -711,7 +759,7 @@ that AddOn:
 
 | Policy | Finalizer removal |
 | --- | --- |
-| `Delete` (default) | The AddOn Manager MUST remove managed resources, including resources managed by delegated controllers or external services, before clearing its finalizer. |
+| `Delete` | The AddOn Manager MUST remove managed resources, including resources managed by delegated controllers or external services, before clearing its finalizer. |
 | `Orphan` | The AddOn Manager stops managing the installation and leaves it in place, then clears its finalizer. |
 
 An AddOn Manager may complete `Delete` cleanup for an installation it created
@@ -722,21 +770,18 @@ establish complete removal, it MUST keep its AddOn finalizer. The API does not
 prescribe a finalizer name or a handoff protocol if an AddOnClass is deleted
 and recreated with another `spec.manager.name`.
 
-During cleanup with a known scope, the AddOn Manager reports `UpToDate=False`
-with reason `Deleting`, or `CleanupBlocked` if removal cannot proceed,
-including when required access is lost. If unavailable AddOnClass inputs leave
-the cleanup scope unknown, it reports `UpToDate=Unknown` with reason
-`CleanupBlocked`. `Available` continues to report observed usability. An
-authorized user can switch to `Orphan` while deletion is pending; the AddOn
-Manager that added the finalizer then clears it even if the AddOnClass is
-unavailable.
+During cleanup, the AddOn Manager reports `UpToDate` with the cleanup reasons
+in the [Status Contract](#status-contract). `Available` continues to report
+observed usability. An authorized user can switch to `Orphan` while deletion is
+pending; the AddOn Manager that added the finalizer then clears it even if the
+AddOnClass is unavailable.
 
 ### Authorization and Scale
 
-By default, a user who can create an AddOn can select any AddOnClass, including
-one in another namespace, even without read permission on that AddOnClass. The
-AddOn can also select a ClusterProfile and supported parameters in its own
-namespace without granting the writer read access to those objects. Platform
+By default, a user who can create an AddOn can select any AddOnClass or
+parameters object, including one in another namespace, even without read
+permission on it. The AddOn can also select a ClusterProfile in its own
+namespace without granting the writer read access to it. Platform
 administrators control AddOnClass creation and can restrict permitted
 AddOnClass and AddOn combinations through admission policy. This API does not
 define per-AddOnClass grants.
@@ -747,27 +792,26 @@ for cleanup. AddOn status MUST NOT contain Secret contents or otherwise reveal
 contents the AddOn writer is not authorized to read.
 
 A shared AddOnClass or parameters change can prompt reconciliation of many
-AddOns. Each AddOn stores five standard conditions.
+AddOns.
+
+### AddOn Manager Library
+
+A Go library in
+[kubernetes-sigs/cluster-inventory-api](https://github.com/kubernetes-sigs/cluster-inventory-api)
+implements the parts of this protocol that are common to AddOn Managers, so
+that an AddOn Manager built on it supplies only the code for the work specific
+to its functionality. AddOn Managers can also implement the protocol without
+the library.
 
 ### Functionality Implementation Patterns
 
 The AddOn Manager turns each assigned AddOn request into functionality for its
 target cluster. It can perform that work itself, manage a controller dedicated
 to the AddOn, or translate the request to an existing controller or service.
-These approaches can be combined. The AddOn Manager remains responsible for
-reporting AddOn status and managing the installation's lifecycle, as described
-in [Reconciliation](#reconciliation) and [Deletion](#deletion).
+These approaches can be combined.
 
-Controller sharing and controller placement are separate choices from the
-integration mechanism:
-
-| Controller sharing | Requests served |
-| --- | --- |
-| Shared across AddOns | Several AddOns, whether they target the same cluster or different clusters |
-| Dedicated per AddOn | One AddOn |
-
-A controller with either sharing model can run in any of the locations below.
-Here, a hosted controller runs outside the target cluster, including on a hub.
+A controller can run in any of the locations below. Here, a hosted controller
+runs outside the target cluster, including on a hub.
 
 | Controller location | Representative access to target resources |
 | --- | --- |
@@ -786,9 +830,8 @@ systems](#existing-add-on-systems) provide other integration options.
 #### Reconciliation by the AddOn Manager
 
 The AddOn Manager can itself reconcile the resources that provide the requested
-functionality. In this example, it runs on a hub cluster and acts as a controller
-shared across two AddOns: `addon-a` targets the spoke `cluster-a`, and `addon-b`
-targets the spoke `cluster-b`.
+functionality. In this example, it runs on a hub cluster as a controller shared
+across two AddOns that target different spoke clusters.
 
 An implementation could use
 [multicluster-runtime](https://github.com/kubernetes-sigs/multicluster-runtime)
@@ -802,12 +845,9 @@ clusters](./shared-multicluster-controller.svg)
 
 The AddOn Manager manages a controller instance for each AddOn. Each controller
 reconciles the resources that provide functionality for that AddOn's target.
-In the diagram, `addon-a` and `addon-b` have separate controllers on the hub;
-the placement options above also apply to these controllers.
 
-The [hosted Karpenter
-example](#hosted-karpenter-and-dependent-resources) illustrates
-remote reconciliation from a controller on the hub.
+For remote reconciliation from a controller on the hub, see the [hosted
+Karpenter example](#hosted-karpenter-and-dependent-resources).
 
 ![One AddOn Manager manages two dedicated controllers on the hub, one for each
 AddOn; each controller reconciles resources on its AddOn's spoke
@@ -818,8 +858,7 @@ cluster](./per-addon-controller.svg)
 The AddOn Manager can manage an integration resource or service request handled
 by an existing controller or service. It translates each AddOn request into
 that API and observes the resulting installation state to report AddOn status.
-The diagram shows these responsibilities without fixing their execution
-locations.
+These responsibilities can run in any of the locations above.
 
 For example, an AddOn Manager running on the target can create a HelmRelease
 there. A shared
@@ -838,16 +877,10 @@ provides functionality for the target cluster](./delegated-functionality.svg)
 
 #### Local cluster
 
-The API also works on a single cluster. AddOn
-`platform-system/otel-collector-local` selects AddOnClass
-`platform-system/otel-collector` and ClusterProfile
-`platform-system/local-cluster`, whose access provider points to that cluster's
-own API server. The AddOnClass supplies shared OpenTelemetry Collector
-parameters, and the AddOn references per-AddOn parameters. The
-OpenTelemetry Collector AddOn Manager reconciles this request and reports the
-installation's status in the AddOn.
-The [local manifest example](#opentelemetry-collector-for-the-local-cluster)
-gives the configuration.
+The API also works on a single cluster. The access provider of ClusterProfile
+`platform-system/local-cluster` points to that cluster's own API server, and
+AddOn `platform-system/otel-collector-local` targets it. See the [local manifest
+example](#opentelemetry-collector-for-the-local-cluster) for the configuration.
 
 ![An AddOn targets local-cluster, which represents the same cluster that hosts
 the AddOn](./local-cluster-addon.svg)
@@ -857,21 +890,15 @@ the AddOn](./local-cluster-addon.svg)
 A platform administrator offers metrics collection through AddOnClass
 `platform-system/otel-collector` on a hub cluster. This AddOnClass selects the
 OpenTelemetry Collector AddOn Manager. AddOn
-`fleet-prod/otel-collector-cluster-a` selects this AddOnClass and requests
-metrics collection for the spoke represented by ClusterProfile
-`fleet-prod/cluster-a` with per-AddOn parameters. The [spoke manifest
-example](#opentelemetry-collector-for-a-spoke-cluster) defines these resources.
+`fleet-prod/otel-collector-cluster-a` requests it for the spoke represented by
+ClusterProfile `fleet-prod/cluster-a`. See the [spoke manifest
+example](#opentelemetry-collector-for-a-spoke-cluster) for these resources.
 
 A second AddOn can select the same AddOnClass for `fleet-prod/cluster-b` with
 different parameters. To update only `cluster-a`, the platform user creates a
 parameters object with the new image tag and changes the first AddOn's
 `parametersRef`. Its `Applied`, `UpToDate`, and `Available` conditions
 distinguish an update in progress from a current, usable installation.
-
-The hub holds the shared AddOnClass and parameters in `platform-system`, and
-the AddOns, per-AddOn parameters, and ClusterProfiles in `fleet-prod`. The
-OpenTelemetry Collector AddOn Manager reports status to each AddOn and manages
-an OpenTelemetry Collector installation on each spoke cluster.
 
 ![Two AddOns on a hub cluster target ClusterProfiles representing the spoke
 clusters cluster-a and cluster-b](./hub-spoke-addons.svg)
@@ -889,11 +916,8 @@ three different add-ons:
 | Hub cluster A | `fleet-prod/cert-manager-cluster-a` | `fleet-prod/cluster-a` | Certificate management through cert-manager |
 | Hub cluster B | `fleet-prod/cilium-cluster-a` | `fleet-prod/cluster-a` | Pod networking through Cilium |
 
-The ClusterProfiles in the three APIs all represent the same `cluster-a`.
-Each AddOn references an AddOnClass and parameters in its own API. Each selected
-AddOn Manager reports status to that AddOn and manages the corresponding
-installation on `cluster-a`. Requests and status remain independent in the
-three APIs.
+The ClusterProfiles in the three APIs all represent the same `cluster-a`. Each
+API holds its own requests and status.
 
 ![AddOns on hub clusters A and B target the spoke cluster-a; a local AddOn on
 cluster-a targets that same cluster through its own ClusterProfile](./multiple-management-sources.svg)
@@ -903,11 +927,6 @@ cluster-a targets that same cluster through its own ClusterProfile](./multiple-m
 The following examples use illustrative parameter APIs defined by AddOn Managers.
 
 #### OpenTelemetry Collector for a spoke cluster
-
-AddOnClass `platform-system/otel-collector`
-selects the OpenTelemetry Collector AddOn Manager and shared parameters. Each
-AddOn supplies an image tag, cluster name, and resource attribute through a
-parameters object in its own namespace.
 
 ```yaml
 apiVersion: observability.example.io/v1alpha1
@@ -937,7 +956,6 @@ spec:
   parametersRef:
     group: observability.example.io
     kind: OpenTelemetryCollectorParameters
-    namespace: platform-system
     name: collector-shared-parameters
 ---
 apiVersion: observability.example.io/v1alpha1
@@ -969,11 +987,6 @@ spec:
     name: cluster-a-parameters
 ```
 
-The OpenTelemetry Collector AddOn Manager combines these parameter objects to
-configure metrics collection and forwarding for `cluster-a`. The endpoint and
-any credentials needed for remote write are supplied separately from cluster
-access; this API does not provision the endpoint.
-
 A completed `cluster-a` AddOn could carry the label and report the following
 status:
 
@@ -989,10 +1002,16 @@ status:
       message: "AddOnClass accepts this AddOn"
       observedGeneration: 1
       lastTransitionTime: "2026-09-25T09:00:00Z"
-    - type: ResolvedRefs
+    - type: ClusterProfileResolved
       status: "True"
-      reason: ResolvedRefs
-      message: "AddOnClass, ClusterProfile, and parameters are resolved"
+      reason: Resolved
+      message: "ClusterProfile fleet-prod/cluster-a is resolved"
+      observedGeneration: 1
+      lastTransitionTime: "2026-09-25T09:00:00Z"
+    - type: ParametersResolved
+      status: "True"
+      reason: Resolved
+      message: "Parameters fleet-prod/cluster-a-parameters are resolved"
       observedGeneration: 1
       lastTransitionTime: "2026-09-25T09:00:00Z"
     - type: Applied
@@ -1020,11 +1039,7 @@ status:
 ClusterProfile `platform-system/local-cluster` points to
 `https://kubernetes.default.svc.cluster.local:443`. The local AddOn selects
 the same `platform-system/otel-collector` AddOnClass, so only its per-AddOn
-parameters and AddOn differ from the fleet request. A `secretreader` access
-provider could obtain cluster credentials from a configured Secret; the
-[Cluster Inventory API access provider
-design](../4322-cluster-inventory/README.md#access-provider-plugin-design)
-defines that mechanism.
+parameters and AddOn differ from the fleet request.
 
 ```yaml
 apiVersion: observability.example.io/v1alpha1
@@ -1059,9 +1074,8 @@ spec:
 
 #### Hosted Karpenter and dependent resources
 
-In this example, the AddOn `karpenter-cluster-a` in namespace `fleet-prod`
-references the ClusterProfile `cluster-a` in the same namespace. That
-ClusterProfile represents the spoke cluster `cluster-a`.
+In this example, the AddOn `karpenter-cluster-a` targets the spoke cluster
+`cluster-a`.
 
 The AddOn Manager installs the Karpenter controller on the hub and configures the
 required Karpenter CRDs on `cluster-a`. The controller has credentials and
@@ -1132,61 +1146,25 @@ Manager needs tests for its installation mechanism.
 ##### Unit tests
 
 AddOn Manager tests cover status transitions, AddOnClass changes within the
-same AddOn Manager, target changes, parameter changes, and cleanup. They use
-the condition meanings and scenarios below.
+same AddOn Manager, target changes, parameter changes, and cleanup.
 
 ##### Integration tests
 
-CRD tests cover scope, policy and initial condition defaults, immutability,
-reference syntax and namespace rules, typed parameters references including
-the empty core API group, and the condition list-map shape. Admission tests cover:
-
-- AddOn updates between AddOnClasses with the same AddOn Manager, rejection of a
-  different AddOn Manager, missing AddOnClasses, an omitted versus explicit local
-  AddOnClass namespace, and a missing old AddOnClass.
-- Status subresource updates, policy-only changes when an AddOnClass is missing,
-  and the UPDATE webhook's failure behavior.
-- AddOnClass deletion with a referencing AddOn in another namespace, an AddOn being
-  deleted or not yet accepted, an AddOnClass change in progress, a same-named AddOnClass
-  in another namespace, list failure, and webhook unavailability.
+CRD tests cover validation and defaulting. Admission tests cover the AddOn
+UPDATE and AddOnClass DELETE webhooks.
 
 ##### e2e tests
 
-AddOn Manager conformance tests cover:
-
-1. An AddOn Manager accepts an AddOnClass and writes five conditions on its AddOns.
-   An AddOnClass reference without a namespace resolves to the AddOn's namespace.
-   AddOnClasses in different inventories may share a name and AddOn Manager while
-   using different parameters; a shared AddOnClass may live in a third namespace.
-2. Changes to AddOn parameters references and to either referenced parameters
-   object's contents reconcile the affected AddOns. Missing or invalid
-   references report `ResolvedRefs=False`; invalid AddOnClass parameters report
-   AddOnClass `Accepted=False` even when its generation is unchanged.
-3. Partial or failed application, an old installation still serving, health
-   failure, drift, target access loss, and AddOn Manager restart produce the
-   distinct `Applied`, `UpToDate`, and `Available` outcomes and reasons in the
-   status contract.
-4. When a ClusterProfile's access configuration points to another cluster,
-   including after recreation under the same name, the AddOn Manager verifies
-   the current target; an installation for a former target does not establish
-   that the current one is available.
-5. A missing or terminating AddOnClass causes no new installation changes. When the
-   AddOnClass disappears, conformance does not require a status update from an AddOn
-   Manager no longer selected by the reference; last reported conditions may
-   remain. Recreating the AddOnClass under the same name prompts evaluation of its
-   current AddOn Manager and parameters.
-6. An AddOnClass change within the same AddOn Manager makes the new AddOnClass the current
-   request. The existing installation may remain while the new request is
-   unresolved or being applied; invalid new parameters prevent normal
-   installation changes and conditions report that progress.
-7. With a missing AddOnClass or invalid AddOnClass parameters, `Delete` and `Orphan`
-   follow the [Deletion](#deletion) rules.
+AddOn Manager conformance tests cover the status, AddOn Manager selection, and
+deletion contract in this KEP.
 
 ### Graduation Criteria
 
 #### Alpha
 
-- Define the two CRDs and admission behavior, and implement one AddOn Manager.
+- Define the two CRDs and admission behavior.
+- Provide the [AddOn Manager library](#addon-manager-library) and implement one
+  AddOn Manager with it.
 - Exercise AddOn Manager selection, parameters, status, target changes, and
   deletion through the Test Plan.
 
@@ -1195,7 +1173,7 @@ AddOn Manager conformance tests cover:
 - At least two independent AddOn Managers with different installation
   mechanisms and one client application, such as a developer portal, using the
   ClusterProfile AddOn API. For AddOns that each AddOn Manager reconciles, the
-  client application uses only their [five standard
+  client application uses only their [standard
   conditions](#status-contract) to determine whether the requested
   installation is applied, current, and usable.
 - Publish a conformance suite for the shared status, AddOn Manager selection,
@@ -1217,10 +1195,13 @@ AddOn Manager conformance tests cover:
 
 ### Version Skew Strategy
 
-An AddOn Manager that cannot interpret current parameters does not report
-`ResolvedRefs=True` or `Applied=True` for them. An implementation supporting
-several API versions MUST preserve the AddOn spec, conditions, and deletion
-intent when converting objects.
+An AddOn Manager that cannot interpret the current AddOnClass parameters does
+not report `Accepted=True` on the AddOnClass or its AddOns. If it cannot
+interpret an AddOn's parameters, it does not report `ParametersResolved=True`
+on that AddOn. In either case, it does not report `Applied=True` for the
+affected AddOns. An implementation supporting several API versions MUST
+preserve the AddOn spec, conditions, and deletion intent when converting
+objects.
 
 ## Production Readiness Review Questionnaire
 
@@ -1235,43 +1216,15 @@ installation effect without an AddOn Manager for its selected AddOnClass.
 
 ###### Can the feature be disabled once it has been enabled (i.e. can we roll back the enablement)?
 
-Deleting an AddOn with `deletionPolicy: Delete` (the default) requests removal
-of its managed installation. With `Orphan`, the installation remains in place;
-see [Deletion](#deletion).
-
-Stopping an AddOn Manager suspends reconciliation without removing its AddOns
-or installations.
-
 ###### What happens if we reenable the feature if it was previously rolled back?
 
-A returning AddOn Manager checks the current AddOnClass, parameters, target,
-and installation before affirming conditions. It can continue deletion from the
-finalizers still in place. An AddOnClass finalizer remains pending until the
-AddOn Manager checks that no AddOn references it. Deleted API objects cannot be
-reconstructed from an installation alone.
-
 ###### Are there any tests for feature enablement/disablement?
-
-The Test Plan covers AddOn Manager restarts, last-known status, changed inputs, and
-finalizers. There is no core feature-gate test.
 
 ### Rollout, Upgrade and Rollback Planning
 
 ###### How can a rollout or rollback fail? Can it impact already running workloads?
 
-An unavailable AddOn UPDATE webhook rejects AddOn updates, and an unavailable
-AddOnClass DELETE webhook rejects AddOnClass deletion. An AddOn Manager outage
-leaves status last-known and prevents installation changes and finalizer
-cleanup. Loss of target access or invalid references can leave an installation
-outdated or delay deletion; neither failure by itself requests uninstallation.
-Core workloads do not acquire a new behavior from this API.
-
 ###### What specific metrics should inform a rollback?
-
-Condition counts and reasons show unresolved references, incomplete
-application, drift, unavailable installations, and blocked cleanup. AddOn Manager
-availability, admission errors, reconciliation latency, and remote API errors
-are implementation-specific signals. The API sets no universal threshold.
 
 ###### Were upgrade and rollback tested? Was the upgrade->downgrade->upgrade path tested?
 
@@ -1283,121 +1236,46 @@ No.
 
 ###### How can an operator determine if the feature is in use by workloads?
 
-Each AddOn represents one requested installation for the ClusterProfile in its
-namespace. `spec.classRef` names the requested AddOnClass; the AddOnClass's
-`spec.manager.name` selects the AddOn Manager while the AddOnClass exists. An
-AddOnClass alone does not mean an installation exists.
-
 ###### How can someone using this feature know that it is working for their instance?
-
-The AddOnClass's `Accepted` condition shows whether its AddOn Manager accepts
-its shared configuration. The AddOn's five conditions show whether the request
-is accepted, references are usable, and the installation is applied, current,
-and available. The user also checks AddOn Manager health when status may be
-stale.
 
 ###### What are the reasonable SLOs (Service Level Objectives) for the enhancement?
 
-The API imposes no common reconciliation-time or availability target because
-installation mechanisms and target access paths vary. Each AddOn Manager sets its
-own numeric service objectives.
-
 ###### What are the SLIs (Service Level Indicators) an operator can use to determine the health of the service?
 
-AddOn Managers can measure availability, reconciliation latency, admission
-errors, remote API failures, and AddOn counts by condition and reason. Metric
-names are not standardized.
-
 ###### Are there any missing metrics that would be useful to have to improve observability of this feature?
-
-No common liveness or input-freshness metric is defined. Each implementation
-provides its own signals for those needs.
 
 ### Dependencies
 
 ###### Does this feature depend on any specific services running in the cluster?
 
-Normal installation reconciliation needs its selected AddOnClass, a
-ClusterProfile in the AddOn's namespace, an AddOn Manager for the AddOnClass,
-and any referenced parameters. The admission webhooks must be available for
-AddOn updates and AddOnClass deletion, with certificates trusted by the API
-server. The AddOnClass DELETE webhook needs permission to list AddOns across
-namespaces. An AddOn Manager may also depend on an installation mechanism or
-an access provider. Examples include:
-
-| Dependency role | Example integration |
-| --- | --- |
-| Installation mechanism | Open Cluster Management add-on functionality, Flux `helm-controller`, or the Amazon Elastic Kubernetes Service add-on API |
-| Target access | The ClusterProfile `secretreader` access provider, which obtains credentials from a configured Secret |
+An AddOn Manager for the AddOnClass, and the AddOn UPDATE and AddOnClass DELETE
+admission webhooks.
 
 ### Scalability
 
 ###### Will enabling / using this feature result in any new API calls?
 
-AddOn Managers watch AddOns, their AddOnClasses, targets, and referenced
-parameters, then update status and finalizers. AddOn UPDATE admission reads the
-old and new AddOnClasses for an AddOnClass change. AddOnClass DELETE admission
-lists AddOns across namespaces to find references in `spec.classRef`.
-
 ###### Will enabling / using this feature result in introducing new API types?
 
-Yes. AddOnClass and AddOn are new namespaced types. Each requested target
-installation has one AddOn; an AddOnClass can be shared across AddOns and
-inventory namespaces.
+Yes. AddOnClass and AddOn are new namespaced types.
 
 ###### Will enabling / using this feature result in any new calls to the cloud provider?
 
-The API itself makes none. An AddOn Manager may call a cloud provider as part
-of its installation mechanism.
-
 ###### Will enabling / using this feature result in increasing size or count of the existing API objects?
-
-No existing Kubernetes type gains fields or instances directly from this API.
-AddOn Managers may create implementation-specific resources.
 
 ###### Will enabling / using this feature result in increasing time taken by any operations covered by existing SLIs/SLOs?
 
-Yes, indirectly, depending on the AddOn Manager's implementation and load.
-AddOn Manager API traffic and installation activity may increase API request
-latency or Pod startup latency through shared resource contention. The admission
-webhooks add latency only to AddOn updates and AddOnClass deletion, which are
-outside the [existing Kubernetes API request latency SLOs](https://github.com/kubernetes/community/blob/master/sig-scalability/slos/api_call_latency.md).
-
 ###### Will enabling / using this feature result in non-negligible increase of resource usage (CPU, RAM, disk, IO, ...) in any components?
 
-A shared AddOnClass or parameters change may reconcile every AddOn that uses
-it. The AddOnClass deletion lookup grows with the number of AddOns.
-Installation size and target access patterns determine AddOn Manager watch
-state, API reads, and status writes.
-
 ###### Can enabling / using this feature result in resource exhaustion of some node resources (PIDs, sockets, inodes, etc.)?
-
-The API requires no per-AddOn process or socket. An AddOn Manager's remote
-connections, polling, and installation resources depend on its implementation
-and are not bounded by the API.
 
 ### Troubleshooting
 
 ###### How does this feature react if the API server and/or etcd is unavailable?
 
-AddOn Managers cannot read current inputs or publish status, and admission cannot
-complete. Existing installations are not uninstalled by that outage. Status
-remains last-known and finalizers keep deletion intent.
-
 ###### What are other known failure modes?
 
-Default `Pending` conditions mean no AddOn Manager has reported an observation.
-Conditions and reasons distinguish unresolved references, incomplete
-application, outdated or unavailable installations, and blocked cleanup. A
-stopped AddOn Manager leaves last-known conditions, so AddOn Manager health is
-needed to identify stale status.
-
 ###### What steps should be taken if SLOs are not being met to determine the problem?
-
-Each AddOn Manager defines its own threshold. Its health and remote-access
-signals distinguish an outage from a request that is invalid, outdated,
-unavailable, or blocked on cleanup. AddOn conditions describe the last state it
-observed.
 
 ## Implementation History
 
@@ -1405,9 +1283,9 @@ observed.
 
 An AddOn Manager needs to observe AddOnClasses and parameter objects as well as
 AddOns. AddOn Managers integrating an existing installation API must translate
-its state into the common conditions. Parameter schemas and installation
-support remain specific to each AddOn Manager. Admission also adds an
-availability dependency for AddOn updates and AddOnClass deletion.
+its state into the common conditions. Each AddOn Manager defines its own
+parameter schemas and installation support. Admission also adds an availability
+dependency for AddOn updates and AddOnClass deletion.
 
 ## Alternatives
 
@@ -1447,8 +1325,5 @@ AddOnClass-level shared configuration.
 - [Cluster API ControlPlane contract](https://cluster-api.sigs.k8s.io/developer/providers/contracts/control-plane)
 - [Cluster API ClusterClass changes](https://cluster-api.sigs.k8s.io/tasks/experimental-features/cluster-class/change-clusterclass)
 - [Open Cluster Management add-on configuration status](https://open-cluster-management.io/docs/getting-started/installation/addon-management/)
-- [OpenTelemetry Kubernetes resource attributes](https://opentelemetry.io/docs/specs/semconv/resource/k8s/)
-- [OpenTelemetry deployment environment attribute](https://opentelemetry.io/docs/specs/semconv/registry/attributes/deployment/)
-- [OpenTelemetry Collector resource processor](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/processor/resourceprocessor/README.md)
 - [OpenTelemetry Collector Prometheus remote write exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/v0.128.0/exporter/prometheusremotewriteexporter/README.md)
 - [Karpenter NodeClaims](https://karpenter.sh/docs/concepts/nodeclaims/)
