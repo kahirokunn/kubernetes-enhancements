@@ -4,6 +4,9 @@ authors:
   - "@kahirokunn"
   - "@mikeshng"
 owning-sig: sig-multicluster
+participating-sigs:
+  - sig-cloud-provider
+  - sig-cluster-lifecycle
 status: provisional
 creation-date: 2026-09-24
 reviewers:

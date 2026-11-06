@@ -16,6 +16,7 @@
     - [Story 1: Self-service add-ons](#story-1-self-service-add-ons)
     - [Story 2: Status and troubleshooting](#story-2-status-and-troubleshooting)
     - [Story 3: Transparent to clients](#story-3-transparent-to-clients)
+    - [Story 4: Single cluster](#story-4-single-cluster)
   - [API Overview](#api-overview)
   - [Users and Resources](#users-and-resources)
   - [Risks and Mitigations](#risks-and-mitigations)
@@ -36,6 +37,7 @@
     - [Integration with an existing controller or service](#integration-with-an-existing-controller-or-service)
   - [Topology Examples](#topology-examples)
     - [Local cluster](#local-cluster)
+    - [Local cluster in a ClusterSet](#local-cluster-in-a-clusterset)
     - [One hub and multiple spokes](#one-hub-and-multiple-spokes)
     - [Multiple hubs and one spoke](#multiple-hubs-and-one-spoke)
   - [Manifest Examples](#manifest-examples)
@@ -129,7 +131,9 @@ Each AddOn Manager defines its parameters, installation mechanisms, access
 requirements, and health checks, and follows a common protocol for receiving
 requests and reporting their status. It can provide hosted or serverless
 functionality using components on the target, on another cluster, or in an
-external service. The API also supports a [local cluster](#local-cluster).
+external service. The API is mainly for multicluster management. A single
+cluster can also use it as a [local cluster](#local-cluster) for its own
+add-ons.
 
 ## Motivation
 
@@ -224,6 +228,7 @@ their status in its own way:
 | [Amazon Elastic Kubernetes Service add-ons](https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html) | `CreateAddon` API | `DescribeAddonVersions` API | Add-on `status` and `health` |
 | [Google Kubernetes Engine add-ons](https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters#addonsconfig) | Cluster `addonsConfig` field | `AddonsConfig` fields | Cluster status |
 | [Cluster API Add-on Provider for Helm](https://github.com/kubernetes-sigs/cluster-api-addon-provider-helm/blob/v0.6.4/docs/quick-start.md) | `HelmChartProxy` | None | `HelmReleaseProxy` status |
+| [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init-phase/#cmd-phase-addon) | `kubeadm init phase addon` | `coredns` and `kube-proxy` subcommands | None |
 | [minikube](https://minikube.sigs.k8s.io/docs/commands/addons/) | `minikube addons enable` | `minikube addons list` | `minikube addons list` |
 
 Platform teams and multicluster projects can implement AddOn Managers to
@@ -296,6 +301,8 @@ provide an add-on of any of these types.
    several locations.
 4. Let AddOn Managers follow the same protocol with any installation mechanism,
    and provide a library for its common parts.
+5. Let platform users request add-ons for a single cluster without a hub
+   cluster.
 
 ### Non-Goals
 
@@ -312,6 +319,8 @@ provide an add-on of any of these types.
   topology, where one hub manages other hubs.
 - Allowing an AddOn to reference a ClusterProfile in another namespace.
 - Defining cluster credentials or the placement of AddOn Manager components.
+- Defining how a cluster is created, or how this API's CRDs and an AddOn
+  Manager are installed.
 
 ## Proposal
 
@@ -345,8 +354,6 @@ Examples include:
   endpoint from my GPU cluster.
 - As a platform user, I want to request add-ons the same way for my EKS
   clusters and my on-premises clusters.
-- As a platform user, I want to request add-ons for a single cluster [from that
-  cluster's own API](#local-cluster).
 
 #### Story 2: Status and troubleshooting
 
@@ -380,6 +387,25 @@ their status on several multicluster platforms through one integration. A
 platform administrator can also offer an add-on through another add-on system,
 such as EKS add-ons for EKS clusters, without changing the portals and
 dashboards that request and display it.
+
+#### Story 4: Single cluster
+
+In this scenario, platform administrators and platform users use AddOnClasses
+and AddOns on a single cluster for the add-ons that cluster needs.
+
+Examples include:
+
+- As a platform user, I want to request add-ons for my only cluster [from its
+  own API](#local-cluster), without running a hub cluster.
+- As a platform user, I want to request the same add-ons for a development
+  cluster on my laptop as for the platform's clusters.
+- As a platform administrator, I want to try an AddOnClass on a development
+  cluster before offering it to many clusters.
+- As a platform user, I want one dashboard to show the state of every add-on
+  on my cluster, including those an AddOn Manager provides through my cloud
+  provider's add-on API.
+- As a platform administrator, I want to know whether my cluster's add-ons
+  still work after I upgrade the cluster.
 
 ### API Overview
 
@@ -885,6 +911,16 @@ example](#opentelemetry-collector-for-the-local-cluster) for the configuration.
 ![An AddOn targets local-cluster, which represents the same cluster that hosts
 the AddOn](./local-cluster-addon.svg)
 
+#### Local cluster in a ClusterSet
+
+A [ClusterSet](../1645-multi-cluster-services-api/README.md#terminology)
+member records its membership in the [`clusterset.k8s.io`
+ClusterProperty](../2149-clusterid/README.md#property-clustersetk8sio). The
+AddOn API does not use this membership, so a local cluster can join or leave a
+ClusterSet without any change to its AddOns or AddOnClasses. AddOns on a hub
+whose inventory includes the cluster can target it as well, as in [Multiple
+hubs and one spoke](#multiple-hubs-and-one-spoke).
+
 #### One hub and multiple spokes
 
 A platform administrator offers metrics collection through AddOnClass
@@ -1146,7 +1182,8 @@ Manager needs tests for its installation mechanism.
 ##### Unit tests
 
 AddOn Manager tests cover status transitions, AddOnClass changes within the
-same AddOn Manager, target changes, parameter changes, and cleanup.
+same AddOn Manager, target changes, parameter changes, cleanup, and
+reconciliation after an AddOn Manager restart or upgrade.
 
 ##### Integration tests
 
@@ -1156,7 +1193,8 @@ UPDATE and AddOnClass DELETE webhooks.
 ##### e2e tests
 
 AddOn Manager conformance tests cover the status, AddOn Manager selection, and
-deletion contract in this KEP.
+deletion contract in this KEP, on a [local cluster](#local-cluster) and on [a
+hub with spoke clusters](#one-hub-and-multiple-spokes).
 
 ### Graduation Criteria
 
@@ -1192,6 +1230,31 @@ deletion contract in this KEP.
   feedback before declaring the API stable.
 
 ### Upgrade / Downgrade Strategy
+
+The API consists of CRDs and admission webhooks that are installed and
+upgraded independently of core Kubernetes components. The following can be
+upgraded or downgraded separately:
+
+- API version: New API versions follow [Kubernetes API
+  versioning](https://kubernetes.io/docs/reference/using-api/#api-versioning).
+  See [Version Skew Strategy](#version-skew-strategy) for conversion and
+  [AddOn Manager Selection and AddOnClass
+  Lifecycle](#addon-manager-selection-and-addonclass-lifecycle) for AddOn
+  updates and AddOnClass deletions while the webhooks are unavailable.
+- AddOn Manager: An upgraded or downgraded AddOn Manager reconciles existing
+  AddOns again from the current objects, as described in
+  [Reconciliation](#reconciliation), and follows the [Version Skew
+  Strategy](#version-skew-strategy) for parameters it cannot interpret.
+- Target cluster: Upgrading or downgrading the target cluster does not change
+  the AddOn. The AddOn Manager reconciles it from the current ClusterProfile,
+  which can report the cluster's Kubernetes
+  [version](../4322-cluster-inventory/README.md#version), and `Available`
+  reports whether the installation is usable on that cluster.
+- Add-on: A platform user upgrades or downgrades an add-on by changing the
+  request, for example the parameters that an AddOn references as in [One hub
+  and multiple spokes](#one-hub-and-multiple-spokes). The API has no version
+  field, so each AddOn Manager decides which version changes it supports and
+  reports the outcome in the AddOn's conditions.
 
 ### Version Skew Strategy
 
